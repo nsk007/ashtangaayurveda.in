@@ -1,0 +1,2 @@
+# ashtangaayurveda.in
+ashtangaayurveda.in
