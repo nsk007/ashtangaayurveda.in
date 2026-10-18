@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#173f35">
-  <meta name="description" content="Ashtanga Ayurveda — a thoughtful approach to everyday wellness. Our online store is coming soon.">
-  <title>Ashtanga Ayurveda | Coming Soon</title>
+  <meta name="description" content="Ashtanga — Beauty Blossomed By Nature. Our online store is coming soon.">
+  <title>Ashtanga | Beauty Blossomed By Nature — Coming Soon</title>
   <style>
     :root {
       --forest: #173f35;
@@ -16,13 +16,11 @@
       --gold: #bd9860;
       --ink: #263a31;
       --muted: #65766a;
-
-      
     }
 
     * { box-sizing: border-box; }
 
-    html { min-height: 100%; }
+    html { min-height: 100%; scroll-behavior: smooth; }
 
     body {
       margin: 0;
@@ -30,8 +28,9 @@
       color: var(--ink);
       background: var(--cream);
       font-family: Georgia, "Times New Roman", serif;
-      display: grid;
-      place-items: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
     .page {
@@ -53,50 +52,45 @@
     .brand {
       display: flex;
       align-items: center;
-      gap: 12px;
-      color: var(--forest);
+      gap: 14px;
       text-decoration: none;
     }
 
-    .brand-mark {
-      width: 42px;
-      height: 42px;
-      border: 1px solid var(--gold);
-      border-radius: 50%;
-      display: grid;
-      place-items: center;
-      font-size: 21px;
+    .brand-logo-img {
+      height: 44px;
+      width: auto;
+      object-fit: contain;
+      display: block;
+    }
+
+    .header-contact-links {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .header-contact-links a {
       color: var(--forest);
-    }
-
-    .brand-name {
-      font-size: 17px;
-      letter-spacing: .13em;
-      text-transform: uppercase;
-      font-weight: bold;
-    }
-
-    .brand-subtitle {
-      margin-top: 4px;
-      color: var(--muted);
-      font-family: Arial, sans-serif;
-      font-size: 9px;
-      letter-spacing: .22em;
-      text-transform: uppercase;
-    }
-
-    .header-note {
-      color: var(--muted);
+      text-decoration: none;
       font-family: Arial, sans-serif;
       font-size: 11px;
-      letter-spacing: .16em;
+      letter-spacing: .12em;
       text-transform: uppercase;
+      padding: 6px 12px;
+      border: 1px solid rgba(23, 63, 53, 0.2);
+      transition: all 0.2s ease;
     }
 
+    .header-contact-links a:hover {
+      background: var(--forest);
+      color: var(--cream);
+    }
+
+    /* Main Grid Layout */
     main {
       flex: 1;
       display: grid;
-      grid-template-columns: 1.05fr .95fr;
+      grid-template-columns: 1.1fr .9fr;
       overflow: hidden;
       min-height: 570px;
       border-radius: 8px;
@@ -105,7 +99,7 @@
     }
 
     .content {
-      padding: clamp(38px, 6vw, 88px);
+      padding: clamp(38px, 5vw, 76px);
       display: flex;
       flex-direction: column;
       align-items: flex-start;
@@ -113,6 +107,8 @@
       color: var(--cream);
       position: relative;
       z-index: 1;
+      overflow-y: auto;
+      max-height: 82vh;
     }
 
     .eyebrow {
@@ -135,10 +131,10 @@
 
     h1 {
       max-width: 580px;
-      margin: 25px 0 22px;
-      font-size: clamp(42px, 5.5vw, 76px);
-      line-height: 1.02;
-      letter-spacing: -.045em;
+      margin: 20px 0 16px;
+      font-size: clamp(36px, 4.5vw, 64px);
+      line-height: 1.05;
+      letter-spacing: -.03em;
       font-weight: normal;
     }
 
@@ -147,21 +143,38 @@
       font-weight: normal;
     }
 
-    .description {
-      max-width: 420px;
-      margin: 0;
+    .philosophy-quote {
+      margin: 0 0 20px 0;
+      font-style: italic;
       color: #d9e0d5;
+      font-size: 14px;
+      line-height: 1.7;
+      border-left: 2px solid var(--gold);
+      padding-left: 14px;
+    }
+
+    .story-snippet {
+      max-width: 480px;
+      margin: 0 0 24px 0;
+      color: #cfd9cb;
       font-family: Arial, sans-serif;
-      font-size: 15px;
-      line-height: 1.85;
+      font-size: 13px;
+      line-height: 1.8;
+    }
+
+    .founder-credit {
+      font-family: Georgia, serif;
+      font-style: italic;
+      color: var(--sage);
+      font-size: 13px;
+      margin-bottom: 24px;
     }
 
     .coming-soon {
       display: inline-flex;
       align-items: center;
       gap: 10px;
-      margin-top: 35px;
-      padding: 13px 17px;
+      padding: 12px 16px;
       border: 1px solid rgba(233, 223, 202, .42);
       color: var(--cream);
       font-family: Arial, sans-serif;
@@ -178,20 +191,12 @@
       box-shadow: 0 0 0 4px rgba(189, 152, 96, .14);
     }
 
-    .small-note {
-      margin-top: 28px;
-      color: #b8c9bd;
-      font-family: Arial, sans-serif;
-      font-size: 12px;
-      line-height: 1.7;
-    }
-
+    /* Right visual section */
     .visual {
       min-height: 100%;
       position: relative;
       overflow: hidden;
-      background:
-        radial-gradient(ellipse at 50% 44%, rgba(248,245,236,.72) 0%, rgba(233,223,202,.86) 35%, rgba(185,201,168,.95) 100%);
+      background: radial-gradient(ellipse at 50% 44%, rgba(248,245,236,.72) 0%, rgba(233,223,202,.86) 35%, rgba(185,201,168,.95) 100%);
       display: grid;
       place-items: center;
     }
@@ -242,6 +247,7 @@
       writing-mode: vertical-rl;
     }
 
+    /* Footer styling */
     footer {
       display: flex;
       justify-content: space-between;
@@ -252,6 +258,7 @@
       font-family: Arial, sans-serif;
       font-size: 11px;
       line-height: 1.6;
+      flex-wrap: wrap;
     }
 
     footer strong {
@@ -259,19 +266,35 @@
       font-weight: 600;
     }
 
-    @media (max-width: 760px) {
+    .footer-contact {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .footer-contact a {
+      color: var(--forest);
+      text-decoration: none;
+    }
+
+    .footer-contact a:hover {
+      text-decoration: underline;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
       .page { padding: 16px; }
-      header { padding: 6px 2px 18px; }
-      .header-note { display: none; }
+      header { padding: 6px 2px 18px; flex-direction: column; align-items: flex-start; }
+      .header-contact-links { width: 100%; justify-content: flex-start; }
       main { grid-template-columns: 1fr; }
-      .content { padding: 46px 30px 48px; }
-      h1 { font-size: clamp(44px, 12vw, 64px); }
-      .visual { min-height: 310px; }
-      .sun { width: 220px; }
-      .ring { width: 280px; }
-      .botanical { width: min(68%, 300px); }
+      .content { padding: 36px 24px; max-height: none; }
+      h1 { font-size: clamp(34px, 9vw, 52px); }
+      .visual { min-height: 280px; }
+      .sun { width: 200px; }
+      .ring { width: 250px; }
+      .botanical { width: min(65%, 260px); }
       .visual-caption { right: 14px; bottom: 14px; }
-      footer { align-items: flex-start; flex-direction: column; gap: 5px; }
+      footer { align-items: flex-start; flex-direction: column; gap: 10px; }
     }
 
     @media (prefers-reduced-motion: no-preference) {
@@ -287,26 +310,33 @@
   <div class="page">
     <header>
       <a class="brand" href="#" aria-label="Ashtanga Ayurveda home">
-        <div class="brand-mark" aria-hidden="true">✳</div>
-        <div>
-          <div class="brand-name">Ashtanga Ayurveda</div>
-          <div class="brand-subtitle">Rooted in nature</div>
-        </div>
+        <!-- Replace logo.png with your actual exported filename -->
+        <img src="logo.png" alt="Ashtanga Logo" class="brand-logo-img">
       </a>
-      <div class="header-note">A more mindful everyday</div>
+      <div class="header-contact-links">
+        <a href="https://wa.me/919496675909" target="_blank" rel="noopener">WhatsApp</a>
+        <a href="https://www.instagram.com/ashtangaayurveda.in/" target="_blank" rel="noopener">Instagram</a>
+      </div>
     </header>
 
     <main>
       <section class="content">
-        <div class="eyebrow">Something natural is growing</div>
-        <h1>Wellness,<br><em>rooted in nature.</em></h1>
-        <p class="description">
-          We’re preparing a thoughtful collection of Ayurveda-inspired wellness essentials
-          for your everyday rituals. Our online store is taking shape — and we can’t wait
-          to welcome you.
+        <div class="eyebrow">Beauty Blossomed By Nature</div>
+        <h1>Pure skincare,<br><em>rooted in tradition.</em></h1>
+        
+        <p class="philosophy-quote">
+          “Our organic products are made with care, using ingredients that are safe, gentle, and inspired by traditional wisdom that will bring nature's goodness to your beauty. Our logo represents Panchamahabhutha—the nature that can transform your beauty inside and out.”
         </p>
-        <div class="coming-soon"><span></span> Our store is coming soon</div>
-        <p class="small-note">A little patience. A little nature.<br>A more mindful way to care for yourself.</p>
+
+        <p class="story-snippet">
+          My journey to Ashtanga began with a personal story of overcoming breakouts through Ayurvedic medicine. Experiencing the transformational power of pure herbal formulations inspired me to bridge ancient science with modern skincare.
+        </p>
+
+        <div class="founder-credit">
+          — Dr. Krishnapriya T<br><span style="font-size: 11px; font-family: Arial, sans-serif; letter-spacing: 0.1em; text-transform: uppercase; color: var(--sage);">Founder, Ashtanga</span>
+        </div>
+
+        <div class="coming-soon"><span></span> Online Shop Coming Soon</div>
       </section>
 
       <section class="visual" aria-label="Decorative botanical illustration">
@@ -352,13 +382,16 @@
           <path d="M205 452 C219 468 229 480 233 493" fill="none" stroke="#315b45" stroke-width="3" stroke-linecap="round"/>
           <path d="M170 493 Q206 480 241 493" fill="none" stroke="#315b45" stroke-width="2" stroke-linecap="round"/>
         </svg>
-        <div class="visual-caption">Nature • Balance • Wellbeing</div>
+        <div class="visual-caption">Panchamahabhutha • Balance • Wellbeing</div>
       </section>
     </main>
 
     <footer>
-      <div>© <strong>Ashtanga Ayurveda</strong>. All rights reserved.</div>
-      <div>Inspired by tradition. Made for everyday life.</div>
+      <div>© <strong>Ashtanga</strong>. Yethadka PO, Badiadka, Kasaragod, Kerala, IN 671552</div>
+      <div class="footer-contact">
+        <span>Email: <a href="mailto:ashtangaayurveda.in@gmail.com">ashtangaayurveda.in@gmail.com</a></span>
+        <span>WhatsApp: <a href="https://wa.me/919496675909">+91 94966 75909</a></span>
+      </div>
     </footer>
   </div>
 </body>
