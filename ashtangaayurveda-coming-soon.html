@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#173f35">
+  <meta name="description" content="Ashtanga Ayurveda — a thoughtful approach to everyday wellness. Our online store is coming soon.">
+  <title>Ashtanga Ayurveda | Coming Soon</title>
+  <style>
+    :root {
+      --forest: #173f35;
+      --forest-deep: #102e27;
+      --sage: #b9c9a8;
+      --cream: #f8f5ec;
+      --sand: #e9dfca;
+      --gold: #bd9860;
+      --ink: #263a31;
+      --muted: #65766a;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { min-height: 100%; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background: var(--cream);
+      font-family: Georgia, "Times New Roman", serif;
+      display: grid;
+      place-items: center;
+    }
+
+    .page {
+      width: min(100%, 1440px);
+      min-height: 100vh;
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 8px 2px 24px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--forest);
+      text-decoration: none;
+    }
+
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      border: 1px solid var(--gold);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 21px;
+      color: var(--forest);
+    }
+
+    .brand-name {
+      font-size: 17px;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+      font-weight: bold;
+    }
+
+    .brand-subtitle {
+      margin-top: 4px;
+      color: var(--muted);
+      font-family: Arial, sans-serif;
+      font-size: 9px;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+    }
+
+    .header-note {
+      color: var(--muted);
+      font-family: Arial, sans-serif;
+      font-size: 11px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1.05fr .95fr;
+      overflow: hidden;
+      min-height: 570px;
+      border-radius: 8px;
+      background: var(--forest);
+      box-shadow: 0 22px 70px rgba(25, 54, 42, .12);
+    }
+
+    .content {
+      padding: clamp(38px, 6vw, 88px);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      color: var(--cream);
+      position: relative;
+      z-index: 1;
+    }
+
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--sage);
+      font-family: Arial, sans-serif;
+      font-size: 11px;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 32px;
+      height: 1px;
+      background: var(--gold);
+    }
+
+    h1 {
+      max-width: 580px;
+      margin: 25px 0 22px;
+      font-size: clamp(42px, 5.5vw, 76px);
+      line-height: 1.02;
+      letter-spacing: -.045em;
+      font-weight: normal;
+    }
+
+    h1 em {
+      color: var(--sage);
+      font-weight: normal;
+    }
+
+    .description {
+      max-width: 420px;
+      margin: 0;
+      color: #d9e0d5;
+      font-family: Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.85;
+    }
+
+    .coming-soon {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 35px;
+      padding: 13px 17px;
+      border: 1px solid rgba(233, 223, 202, .42);
+      color: var(--cream);
+      font-family: Arial, sans-serif;
+      font-size: 11px;
+      letter-spacing: .17em;
+      text-transform: uppercase;
+    }
+
+    .coming-soon span {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 0 4px rgba(189, 152, 96, .14);
+    }
+
+    .small-note {
+      margin-top: 28px;
+      color: #b8c9bd;
+      font-family: Arial, sans-serif;
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    .visual {
+      min-height: 100%;
+      position: relative;
+      overflow: hidden;
+      background:
+        radial-gradient(ellipse at 50% 44%, rgba(248,245,236,.72) 0%, rgba(233,223,202,.86) 35%, rgba(185,201,168,.95) 100%);
+      display: grid;
+      place-items: center;
+    }
+
+    .sun {
+      position: absolute;
+      width: min(31vw, 370px);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: rgba(248, 245, 236, .42);
+      border: 1px solid rgba(23, 63, 53, .12);
+    }
+
+    .ring {
+      position: absolute;
+      width: min(39vw, 470px);
+      aspect-ratio: 1;
+      border: 1px solid rgba(23, 63, 53, .22);
+      border-radius: 50%;
+    }
+
+    .ring::before, .ring::after {
+      content: "";
+      position: absolute;
+      inset: 19px;
+      border: 1px solid rgba(23, 63, 53, .14);
+      border-radius: 50%;
+    }
+
+    .ring::after { inset: 39px; }
+
+    .botanical {
+      position: relative;
+      width: min(76%, 430px);
+      z-index: 1;
+      filter: drop-shadow(0 18px 20px rgba(28, 62, 47, .12));
+    }
+
+    .visual-caption {
+      position: absolute;
+      right: 28px;
+      bottom: 25px;
+      color: var(--forest);
+      font-family: Arial, sans-serif;
+      font-size: 10px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      writing-mode: vertical-rl;
+    }
+
+    footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+      padding: 22px 2px 4px;
+      color: var(--muted);
+      font-family: Arial, sans-serif;
+      font-size: 11px;
+      line-height: 1.6;
+    }
+
+    footer strong {
+      color: var(--forest);
+      font-weight: 600;
+    }
+
+    @media (max-width: 760px) {
+      .page { padding: 16px; }
+      header { padding: 6px 2px 18px; }
+      .header-note { display: none; }
+      main { grid-template-columns: 1fr; }
+      .content { padding: 46px 30px 48px; }
+      h1 { font-size: clamp(44px, 12vw, 64px); }
+      .visual { min-height: 310px; }
+      .sun { width: 220px; }
+      .ring { width: 280px; }
+      .botanical { width: min(68%, 300px); }
+      .visual-caption { right: 14px; bottom: 14px; }
+      footer { align-items: flex-start; flex-direction: column; gap: 5px; }
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .sun { animation: breathe 8s ease-in-out infinite alternate; }
+      @keyframes breathe {
+        from { transform: scale(.98); opacity: .75; }
+        to { transform: scale(1.03); opacity: 1; }
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <a class="brand" href="#" aria-label="Ashtanga Ayurveda home">
+        <div class="brand-mark" aria-hidden="true">✳</div>
+        <div>
+          <div class="brand-name">Ashtanga Ayurveda</div>
+          <div class="brand-subtitle">Rooted in nature</div>
+        </div>
+      </a>
+      <div class="header-note">A more mindful everyday</div>
+    </header>
+
+    <main>
+      <section class="content">
+        <div class="eyebrow">Something natural is growing</div>
+        <h1>Wellness,<br><em>rooted in nature.</em></h1>
+        <p class="description">
+          We’re preparing a thoughtful collection of Ayurveda-inspired wellness essentials
+          for your everyday rituals. Our online store is taking shape — and we can’t wait
+          to welcome you.
+        </p>
+        <div class="coming-soon"><span></span> Our store is coming soon</div>
+        <p class="small-note">A little patience. A little nature.<br>A more mindful way to care for yourself.</p>
+      </section>
+
+      <section class="visual" aria-label="Decorative botanical illustration">
+        <div class="sun"></div>
+        <div class="ring"></div>
+        <svg class="botanical" viewBox="0 0 420 500" role="img" aria-label="Minimal botanical leaves illustration" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="leaf" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#68866a"/>
+              <stop offset="1" stop-color="#234d3d"/>
+            </linearGradient>
+            <linearGradient id="leafLight" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#a5b88c"/>
+              <stop offset="1" stop-color="#52775b"/>
+            </linearGradient>
+          </defs>
+          <path d="M206 452 C208 365 208 290 216 207 C222 143 239 92 279 44" fill="none" stroke="#315b45" stroke-width="4" stroke-linecap="round"/>
+          <path d="M211 365 C166 334 121 297 89 248" fill="none" stroke="#315b45" stroke-width="3" stroke-linecap="round"/>
+          <path d="M213 311 C260 278 300 238 326 188" fill="none" stroke="#315b45" stroke-width="3" stroke-linecap="round"/>
+          <path d="M215 254 C172 225 145 189 133 145" fill="none" stroke="#315b45" stroke-width="3" stroke-linecap="round"/>
+          <path d="M224 203 C267 176 289 142 296 103" fill="none" stroke="#315b45" stroke-width="3" stroke-linecap="round"/>
+
+          <path d="M89 248 C45 238 34 196 48 162 C87 166 117 196 117 224 C110 238 100 245 89 248Z" fill="url(#leafLight)"/>
+          <path d="M89 248 C80 216 65 189 49 164" fill="none" stroke="#315b45" stroke-width="1.6"/>
+          <path d="M130 146 C96 128 91 88 110 59 C147 73 164 104 154 132 C146 140 138 144 130 146Z" fill="url(#leaf)"/>
+          <path d="M130 146 C129 114 121 85 111 61" fill="none" stroke="#d4dfc2" stroke-width="1.5"/>
+          <path d="M279 44 C245 38 229 10 238 -17 C270 -7 290 14 288 34Z" fill="url(#leafLight)" transform="translate(0 28)"/>
+          <path d="M279 72 C270 47 256 28 240 12" fill="none" stroke="#315b45" stroke-width="1.5"/>
+          <path d="M296 103 C294 66 321 38 356 36 C364 71 345 103 314 113 C306 111 300 107 296 103Z" fill="url(#leaf)"/>
+          <path d="M296 103 C318 80 338 57 355 37" fill="none" stroke="#d4dfc2" stroke-width="1.5"/>
+          <path d="M326 188 C329 150 362 126 397 133 C398 169 375 197 342 201 C335 198 330 193 326 188Z" fill="url(#leafLight)"/>
+          <path d="M326 188 C350 170 373 151 396 134" fill="none" stroke="#315b45" stroke-width="1.5"/>
+          <path d="M89 248 C119 252 146 271 160 299 C133 319 97 307 81 278 C82 267 85 256 89 248Z" fill="url(#leaf)"/>
+          <path d="M89 248 C111 269 135 286 159 299" fill="none" stroke="#d4dfc2" stroke-width="1.5"/>
+          <path d="M213 311 C215 274 244 246 280 250 C282 284 260 312 229 321 C222 319 217 315 213 311Z" fill="url(#leafLight)"/>
+          <path d="M213 311 C239 291 260 271 279 251" fill="none" stroke="#315b45" stroke-width="1.5"/>
+          <path d="M215 254 C179 254 151 230 147 196 C180 187 212 207 222 237 C220 244 218 250 215 254Z" fill="url(#leafLight)"/>
+          <path d="M215 254 C194 232 171 212 148 197" fill="none" stroke="#315b45" stroke-width="1.5"/>
+          <path d="M224 203 C223 168 246 138 279 134 C286 166 269 196 239 210 C233 209 228 206 224 203Z" fill="url(#leaf)"/>
+          <path d="M224 203 C244 180 262 157 278 135" fill="none" stroke="#d4dfc2" stroke-width="1.5"/>
+
+          <path d="M205 452 C192 467 182 480 178 493" fill="none" stroke="#315b45" stroke-width="3" stroke-linecap="round"/>
+          <path d="M205 452 C219 468 229 480 233 493" fill="none" stroke="#315b45" stroke-width="3" stroke-linecap="round"/>
+          <path d="M170 493 Q206 480 241 493" fill="none" stroke="#315b45" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <div class="visual-caption">Nature • Balance • Wellbeing</div>
+      </section>
+    </main>
+
+    <footer>
+      <div>© <strong>Ashtanga Ayurveda</strong>. All rights reserved.</div>
+      <div>Inspired by tradition. Made for everyday life.</div>
+    </footer>
+  </div>
+</body>
+</html>
