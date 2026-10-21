@@ -1,0 +1,101 @@
+*** Blaze Ads Changelog ***
+
+2026-01-27 - version 0.9.0
+* Update - Update Jetpack dependencies to latest versions
+
+2026-01-13 - version 0.8.1
+* Update - Updates the latest tested version and readme
+* Update - Updates the Woo logo from the Woo purple to blaze orange flame
+
+2025-08-12 - version 0.8.0
+* Update - update jetpack-blaze package to use latest version
+
+2025-07-02 - version 0.7.0
+* Fix - Fixes the i18n notices on the plugin (Jetpack IDC config and marketing channel descriptions)
+* Fix - Update actions/upload-artifact from v3 to v4 to use the latest version
+
+2025-01-08 - version 0.6.0
+* Update - Updates the plugin documentation page
+
+2025-01-06 - version 0.5.3
+* Fix - Fixes a compatibility bug with with newer versions of WooCommerce
+* Update - Updates composer dependencies to use the new Blaze package version
+
+2024-10-31 - version 0.5.2
+* Add - Adds the assets for the DotOrg directory
+* Update - updates composer dependency for the Blaze package
+
+2024-10-01 - version 0.5.1
+* Update - Run error reponses though esc_html
+
+2024-09-30 - version 0.5.0
+* Fix - fixing "The workflow is requesting 'actions: write', but is only allowed 'actions: none'."
+* Fix - Reinstate GH token in release PR action
+* Fix - Removes old dashboard compatibility classes. They are no longer needed
+* Fix - Removes permissions that were on the step level, this is not supported and caused action failures
+* Update - Changes the menu slug from wc-blaze to wp-blaze
+* Update - Improves the handling of the DSP API responses
+* Update - minor code cleanups, type hinting, access modifiers, return types
+* Update - Refactors the rest of the files to follow the new plugin's name
+* Update - Removes a reference to a remote image, and brings it into the plugin
+* Update - Removes the custom translation code to start using the default dotorg mechanism
+* Update - Update action permissions on a per job basis
+* Dev - Adds composer.json to the release build
+
+2024-08-19 - version 0.4.1
+* Dev - fix concerns reported by running Plugin Check (PCP)
+
+2024-08-15 - version 0.4.0
+* Add - Adds additional flags to the dashboard config initial data
+* Add - Adds the plugin version as one of the props that we send to the dashboard app
+* Update - Extend plugin to support sites without woo
+* Update - Rename Blaze for WooCommerce to Blaze Ads
+* Update - update jetpack connect flow and idc for non-woo sites
+
+2024-07-29 - version 0.3.2
+* Dev - Fix changelog entries missing when generating readme.txt
+* Dev - update license
+
+2024-06-25 - version 0.3.1
+* Fix - Update Woo header value
+
+2024-06-25 - version 0.3.0
+* Add - Add Woo plugin header
+* Update - Use WooCommerce style changelog
+
+2024-06-21 - version 0.2.1
+* Fix - Fix linter issues
+
+2024-06-20 - version 0.2.0
+* Update - Change plugin slug from woo-blaze to blaze-ads
+* Update - Update the version of the packages: automattic/jetpack-blaze, automattic/jetpack-sync
+
+2024-05-08 - version 0.1.1
+* Fix - Fixes the marketing channel setup check
+* Add - Add Jetpack connect and IDC customization
+* Add - Adds the integration with Jetpack Sync module
+* Update - Updates the blaze disabled check to improve compatibility with the Jetapck plugin
+
+2024-04-23 - version 0.1.0
+* Fix - Added translations fetching support from the translate.wordpress api service
+* Add - Added admin notices to notify of plugin dependencies
+* Update - Updates the Blaze module customization to adapt to the next Jetpack version
+
+2024-02-29 - version 0.0.6
+* Fix - Hides the Woo Blaze marketing channel if the site is not Blaze eligible
+* Add - Adds configuration needed to the dashboard to render the finish setup page
+
+2024-02-22 - version 0.0.5
+* Fix - change the condition in load_admin_scripts to include all hooks ending with _wc-blaze
+* Fix - Fixes initialization of the plugin in installations without WooCommerce
+* Fix - Fixes the locale used to render the dashboard
+
+2024-02-21 - version 0.0.4
+* Add - Adds a conversion pixel call when a order is made
+* Add - Implemented MultiMedia Marketing Channel interface to include Blaze/Promote post as an available marketing channel
+
+2024-02-12 - version 0.0.3
+* Add - Added i18n modules and build commands in package.json
+* Add - Adds GitHub actions and workflows to the repository
+* Add - Adds the Blaze for Woo entry point
+* Add - translation github action

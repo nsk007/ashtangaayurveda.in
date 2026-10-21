@@ -1,0 +1,25 @@
+<!-- wp:shortcode -->[ashtanga_store_header]<!-- /wp:shortcode -->
+<!-- wp:group {"tagName":"main","className":"ashtanga-content ashtanga-woocommerce-archive","layout":{"type":"constrained"}} -->
+<main class="wp-block-group ashtanga-content ashtanga-woocommerce-archive">
+	<!-- wp:woocommerce/breadcrumbs /-->
+	<!-- wp:query-title {"type":"archive","showPrefix":false} /-->
+	<!-- wp:term-description /-->
+	<!-- wp:woocommerce/store-notices /-->
+	<!-- wp:group {"layout":{"type":"flex","flexWrap":"nowrap","justifyContent":"space-between"}} -->
+	<div class="wp-block-group"><!-- wp:woocommerce/product-results-count /--><!-- wp:woocommerce/catalog-sorting /--></div>
+	<!-- /wp:group -->
+	<!-- wp:woocommerce/product-collection {"queryId":0,"query":{"woocommerceAttributes":[],"woocommerceStockStatus":["instock","outofstock","onbackorder"],"taxQuery":{},"isProductCollectionBlock":true,"perPage":16,"pages":0,"offset":0,"postType":"product","order":"asc","orderBy":"title","author":"","search":"","exclude":[],"sticky":"","inherit":true},"tagName":"div","displayLayout":{"type":"flex","columns":4,"shrinkColumns":true},"queryContextIncludes":["collection"],"align":"wide"} -->
+	<div class="wp-block-woocommerce-product-collection alignwide">
+		<!-- wp:woocommerce/product-template -->
+		<!-- wp:woocommerce/product-image {"showSaleBadge":true,"imageSizing":"thumbnail","isDescendentOfQueryLoop":true} /-->
+		<!-- wp:post-title {"textAlign":"left","level":2,"isLink":true,"fontSize":"medium","__woocommerceNamespace":"woocommerce/product-collection/product-title"} /-->
+		<!-- wp:woocommerce/product-price {"isDescendentOfQueryLoop":true,"fontSize":"small"} /-->
+		<!-- wp:woocommerce/product-button {"isDescendentOfQueryLoop":true,"fontSize":"small"} /-->
+		<!-- /wp:woocommerce/product-template -->
+		<!-- wp:query-pagination {"layout":{"type":"flex","justifyContent":"center"}} --><!-- wp:query-pagination-previous /--><!-- wp:query-pagination-numbers /--><!-- wp:query-pagination-next /--><!-- /wp:query-pagination -->
+		<!-- wp:woocommerce/product-collection-no-results --><!-- wp:paragraph --><p>No products were found.</p><!-- /wp:paragraph --><!-- /wp:woocommerce/product-collection-no-results -->
+	</div>
+	<!-- /wp:woocommerce/product-collection -->
+</main>
+<!-- /wp:group -->
+<!-- wp:shortcode -->[ashtanga_store_footer]<!-- /wp:shortcode -->

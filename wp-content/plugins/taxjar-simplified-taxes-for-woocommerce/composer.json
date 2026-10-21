@@ -1,0 +1,25 @@
+{
+  "name": "taxjar/taxjar-woocommerce",
+  "description": "Save hours every month by putting your sales tax on autopilot. Automated, multi-state sales tax calculation, collection, and filing.",
+  "homepage": "https://www.taxjar.com/woocommerce-sales-tax-plugin/",
+  "type": "wordpress-plugin",
+  "license": "GPL-2.0+",
+  "require": {
+    "composer/installers": "v2.0.0"
+  },
+  "require-dev": {
+    "squizlabs/php_codesniffer": "^3.7",
+    "wp-coding-standards/wpcs": "^3.0",
+    "phpunit/phpunit": "^9",
+		"yoast/phpunit-polyfills": "^2.0",
+    "phpcsstandards/phpcsutils": "^1.0",
+    "phpcsstandards/phpcsextra": "^1.0",
+    "dealerdirect/phpcodesniffer-composer-installer": "^1.0"
+  },
+  "config": {
+    "allow-plugins": {
+      "composer/installers": true,
+      "dealerdirect/phpcodesniffer-composer-installer": true
+    }
+  }
+}

@@ -1,0 +1,150 @@
+# Copyright (C) 2026 Automattic
+# This file is distributed under the GPLv2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: Blaze Ads 0.9.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/blaze-ads\n"
+"POT-Creation-Date: 2026-01-27 13:30:31+00:00\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2026-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"X-Generator: node-wp-i18n 1.2.7\n"
+
+#: blaze-ads.php:83
+msgid "Safe Mode"
+msgstr ""
+
+#: blaze-ads.php:84 blaze-ads.php:107
+msgid "Safe Mode activated"
+msgstr ""
+
+#: blaze-ads.php:87
+#. translators: %s: Blaze Ads.
+msgid ""
+"We’ve detected that you have duplicate sites connected to %s. When Safe "
+"Mode is active, some features like campaign creation may not be available "
+"until you’ve resolved this issue below. Safe Mode is most frequently "
+"activated when you’re transferring your site from one domain to another, or "
+"creating a staging site for testing. <safeModeLink>Learn more</safeModeLink>"
+msgstr ""
+
+#: blaze-ads.php:95
+#. translators: %s: Blaze Ads.
+msgid "%s connection successfully transferred"
+msgstr ""
+
+#: blaze-ads.php:100
+#. translators: %s: Blaze Ads.
+msgid "Safe Mode has been deactivated and %s is fully functional."
+msgstr ""
+
+#: blaze-ads.php:103
+msgid "Transfer connection"
+msgstr ""
+
+#: blaze-ads.php:104
+msgid "Transfer your connection"
+msgstr ""
+
+#: blaze-ads.php:105 blaze-ads.php:106
+msgid "Create a new connection"
+msgstr ""
+
+#: blaze-ads.php:110
+#. translators: %s: Blaze Ads.
+msgid ""
+"We’ve detected that you have duplicate sites connected to %s. When Safe "
+"Mode is active, some features like campaign creation may not be available "
+"until you’ve resolved this issue below. Safe Mode is most frequently "
+"activated when you’re transferring your site from one domain to another, or "
+"creating a staging site for testing. A site adminstrator can resolve this "
+"issue. <safeModeLink>Learn more</safeModeLink>"
+msgstr ""
+
+#: blaze-ads.php:120
+#. translators: %s: Blaze Ads.
+msgid "%s Safe Mode"
+msgstr ""
+
+#: blaze-ads.php:125
+#. translators: %s: Blaze Ads.
+msgid ""
+"<strong>Notice:</strong> It appears that your 'wp-config.php' file might be "
+"using dynamic site URL values. Dynamic site URLs could cause %s to enter "
+"Safe Mode. <dynamicSiteUrlSupportLink>Learn how to set a static site "
+"URL.</dynamicSiteUrlSupportLink>"
+msgstr ""
+
+#: blaze-ads.php:151
+#. translators: %1$s: The current site domain name. %2$s: The original site
+#. domain name. Please keep hostname tags in your translation so that they can
+#. be formatted properly. %3$s: Blaze Ads.
+msgid ""
+"Transfer your %3$s connection from <hostname>%2$s</hostname> to this site "
+"<hostname>%1$s</hostname>. <hostname>%2$s</hostname> will be disconnected "
+"from %3$s."
+msgstr ""
+
+#: blaze-ads.php:162
+#. translators: %1$s: The current site domain name. %2$s: The original site
+#. domain name. Please keep hostname tags in your translation so that they can
+#. be formatted properly. %3$s: Blaze Ads.
+msgid ""
+"Create a new connection to %3$s for <hostname>%1$s</hostname>. Your "
+"<hostname>%2$s</hostname> connection will remain as is."
+msgstr ""
+
+#. Plugin Name of the plugin/theme
+msgid "Blaze Ads"
+msgstr ""
+
+#: includes/class-blaze-dashboard.php:87 includes/class-blaze-dashboard.php:88
+msgid "Advertising"
+msgstr ""
+
+#: includes/class-blaze-dependency-service.php:143
+#. translators: %1: Blaze Ads, %2: current Blaze Ads version, %3: WooCommerce,
+#. %4: required WC version number, %5: currently installed WC version number
+msgid ""
+"%1$s %2$s requires <strong>%3$s %4$s</strong> or greater to be installed "
+"(you are using %5$s). "
+msgstr ""
+
+#: includes/class-blaze-dependency-service.php:161
+#. translators: %1: Blaze Ads, %2: required WP version number, %3: currently
+#. installed WP version number
+msgid ""
+"%1$s requires <strong>WordPress %2$s</strong> or greater (you are using "
+"%3$s)."
+msgstr ""
+
+#: includes/class-blaze-dependency-service.php:172
+msgid "Update WordPress"
+msgstr ""
+
+#: includes/class-blaze-marketing-channel.php:104
+msgid ""
+"Drive sales, and elevate your products to center stage, effortlessly. "
+"Witness your business flourishing in the blink of an eye."
+msgstr ""
+
+#. Plugin URI of the plugin/theme
+msgid "https://github.com/automattic/blaze-ads"
+msgstr ""
+
+#. Description of the plugin/theme
+msgid ""
+"One-click and you're set! Create ads for your products and store simpler "
+"than ever. Get started now and watch your business grow."
+msgstr ""
+
+#. Author of the plugin/theme
+msgid "Automattic"
+msgstr ""
+
+#. Author URI of the plugin/theme
+msgid "https://automattic.com/"
+msgstr ""

@@ -1,0 +1,194 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ * All rights reserved.
+ *
+ * This source code is licensed under the license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+/**
+ * Supported PII data types for normalization and hashing
+ */
+export declare const PII_DATA_TYPE: {
+  readonly PHONE: 'phone';
+  readonly EMAIL: 'email';
+  readonly FIRST_NAME: 'first_name';
+  readonly LAST_NAME: 'last_name';
+  readonly DATE_OF_BIRTH: 'date_of_birth';
+  readonly GENDER: 'gender';
+  readonly CITY: 'city';
+  readonly STATE: 'state';
+  readonly ZIP_CODE: 'zip_code';
+  readonly COUNTRY: 'country';
+  readonly EXTERNAL_ID: 'external_id';
+};
+
+export type PiiDataType = typeof PII_DATA_TYPE[keyof typeof PII_DATA_TYPE];
+
+/**
+ * Cookie settings for setting browser cookies
+ */
+export declare class CookieSettings {
+  name: string;
+  value: string;
+  maxAge: number;
+  domain: string;
+
+  constructor(name: string, value: string, maxAge: number, domain: string);
+}
+
+/**
+ * A plain data object representing specific HTTP request details.
+ */
+export declare class PlainDataObject {
+  public host: string;
+  public query_params: QueryParams;
+  public cookies: Cookies;
+  public referer: string | null;
+  public x_forwarded_for: string | null;
+  public remote_address: string | null;
+  public scheme: string | null;
+  public request_uri: string | null;
+
+  constructor(
+    host: string,
+    query_params: QueryParams,
+    cookies: Cookies,
+    referer: string | null,
+    x_forwarded_for: string | null,
+    remote_address: string | null,
+    scheme?: string | null,
+    request_uri?: string | null
+  );
+}
+
+/**
+ * Interface for ETLD+1 resolver object
+ */
+export interface ETLD1Resolver {
+  resolveETLDPlus1(hostname: string): string;
+}
+
+/**
+ * Type for ParamBuilder constructor input - either array of domains or ETLD+1 resolver
+ */
+export type ParamBuilderInput = string[] | ETLD1Resolver;
+
+/**
+ * Interface for query parameters object
+ */
+export interface QueryParams {
+  [key: string]: string;
+}
+
+/**
+ * Interface for cookies object
+ */
+export interface Cookies {
+  [key: string]: string;
+}
+
+/**
+ * Main ParamBuilder class for building Conversions API parameters
+ */
+export declare class ParamBuilder {
+  /**
+   * Create a new ParamBuilder instance
+   * @param input_params Either an array of domain strings or an ETLD+1 resolver object
+   */
+  constructor(input_params?: ParamBuilderInput);
+
+  /**
+   * Process an incoming request to extract and build Facebook parameters
+   * @param host The host from the request
+   * @param queries Query parameters from the request
+   * @param cookies Cookies from the request
+   * @param referer Optional referer URL
+   * @returns Array of CookieSettings to be set
+   */
+  processRequest(
+    host: string,
+    queries: QueryParams | null,
+    cookies: Cookies | null,
+    referer?: string | null,
+    xForwardedFor?: string | null,
+    remoteAddress?: string | null
+  ): CookieSettings[];
+
+  /**
+   * Get the cookies that should be set after processing a request
+   * @returns Array of CookieSettings
+   */
+  getCookiesToSet(): CookieSettings[];
+
+  /**
+   * Get the Facebook Click ID (fbc) parameter value
+   * @returns The fbc value or null if not available
+   */
+  getFbc(): string | null;
+
+  /**
+   * Get the Facebook Browser ID (fbp) parameter value
+   * @returns The fbp value or null if not available
+   */
+  getFbp(): string | null;
+
+  /**
+   * Get the Client IP Address (client_ip_address) parameter value
+   * @returns The client_ip_address value or null if not available
+   */
+  getClientIpAddress(): string | null;
+
+  /**
+   * Get the referrer URL from the last processed request
+   * @returns The referrer URL or null if not available
+   */
+  getReferrerUrl(): string | null;
+
+  /**
+   * Get the event source URL constructed from the last processed request context
+   * @returns The event source URL or null if host was not available
+   */
+  getEventSourceUrl(): string | null;
+
+  /**
+   * Process an incoming request using a context object or PlainDataObject
+   * @param context The request context or PlainDataObject
+   * @returns Array of CookieSettings to be set
+   */
+  processRequestFromContext(context?: PlainDataObject | object | null): CookieSettings[];
+
+  /**
+   * Normalize and hash PII data
+   * @param piiValue The PII value to normalize and hash
+   * @param dataType The type of PII data (e.g., 'email', 'phone', 'first_name')
+   * @returns The normalized and hashed PII value, or null if invalid
+   */
+  getNormalizedAndHashedPII(piiValue: string, dataType: PiiDataType | string): string | null;
+
+  // Internal used privat methods
+  private _buildParamConfigs(existing_payload: string, query: string, prefix: string, value: string): string;
+  private _preprocessCookie(cookies: Cookies | null, cookie_name: string): string | null;
+  private _isValidSegmentCount(length: number): boolean;
+  private _validateAppendix(appendix_value: string): boolean;
+  private _validateCoreStructure(segments: string[]): boolean;
+  private _updateCookieWithLanguageToken(cookie_value: string, cookie_name: string): string;
+  private _isDigit(str: string): boolean;
+  private _getRefererQuery(referer_url: string | null): URLSearchParams | null;
+  private _computeETLDPlus1ForHost(host: string): void;
+  private _getEtldPlus1(hostname: string): string;
+  private _extractHostFromHttpHost(value: string): string | null;
+  private _isIPAddress(value: string): boolean;
+  private _maybeBracketIPv6(value: string): string;
+  private _isIPv6Address(value: string): boolean;
+  private _isPrivateIPv4(value: string): boolean;
+  private _isPrivateIPv6(value: string): boolean;
+  private _isPublicIp(value: string): boolean;
+  private _getClientIpFromRequest(xForwardedFor?: string | null, remoteAddress?: string | null): string | null;
+  private _removeLanguageToken(value: string): string;
+  private _getClientIpFromCookie(cookies: Cookies | null): string | null;
+  private _getLanguageToken(value: string): string | null;
+  private _getClientIpLanguageTokenFromCookie(cookies: Cookies | null): string | null;
+  private _getClientIp(cookies: Cookies | null, xForwardedFor?: string | null, remoteAddress?: string | null): string | null;
+  private _constructEventSourceUrl(data: PlainDataObject): string | null;
+}

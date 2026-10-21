@@ -1,0 +1,964 @@
+<?php
+/**
+ * Abstract product generator class
+ *
+ * @package SmoothGenerator\Abstracts
+ */
+
+namespace WC\SmoothGenerator\Generator;
+
+use WC\SmoothGenerator\Util\RandomRuntimeCache;
+
+/**
+ * Product data generator.
+ */
+class Product extends Generator {
+	/**
+	 * Holds array of product IDs for generating relationships.
+	 *
+	 * @var array Array of IDs.
+	 */
+	protected static $product_ids = array();
+
+	/**
+	 * Holds array of global attributes new products may reuse.
+	 *
+	 * @var array Array of attributes.
+	 */
+	protected static $global_attributes = array(
+		'Color'        => array(
+			'Green',
+			'Blue',
+			'Red',
+			'Yellow',
+			'Indigo',
+			'Violet',
+			'Black',
+			'White',
+			'Orange',
+			'Pink',
+			'Purple',
+		),
+		'Size'         => array(
+			'Small',
+			'Medium',
+			'Large',
+			'XL',
+			'XXL',
+			'XXXL',
+		),
+		'Numeric Size' => array(
+			'6',
+			'7',
+			'8',
+			'9',
+			'10',
+			'11',
+			'12',
+			'13',
+			'14',
+			'15',
+			'16',
+			'17',
+			'18',
+			'19',
+			'20',
+		),
+	);
+
+	/**
+	 * Return a new product.
+	 *
+	 * @param bool  $save Save the object before returning or not.
+	 * @param array $assoc_args Arguments passed via the CLI for additional customization.
+	 * @return \WC_Product|\WP_Error The product object consisting of random data, or WP_Error on failure.
+	 */
+	public static function generate( $save = true, $assoc_args = array() ) {
+		parent::maybe_initialize_generators();
+
+		$type = self::get_product_type( $assoc_args );
+		switch ( $type ) {
+			case 'simple':
+			default:
+				$product = self::generate_simple_product();
+				break;
+			case 'variable':
+				$product = self::generate_variable_product();
+				break;
+			case 'booking':
+				$product = self::generate_booking_product();
+				break;
+			case 'bookable-service':
+				$product = self::generate_bookable_service_product();
+				break;
+			case 'bookable-event':
+				$product = self::generate_bookable_event_product();
+				break;
+		}
+
+		// Check if product generation failed.
+		if ( is_wp_error( $product ) ) {
+			return $product;
+		}
+
+		if ( $product ) {
+			$product->save();
+
+			// Assign brand terms using wp_set_object_terms, but only if the taxonomy exists.
+			if ( taxonomy_exists( 'product_brand' ) ) {
+				$brand_ids = self::get_term_ids( 'product_brand', self::$faker->numberBetween( 1, 3 ) );
+				if ( ! empty( $brand_ids ) ) {
+					$brand_result = wp_set_object_terms( $product->get_id(), $brand_ids, 'product_brand' );
+					if ( is_wp_error( $brand_result ) ) {
+						return $brand_result;
+					}
+				}
+			}
+		}
+
+		// Limit size of stored relationship IDs.
+		if ( 100 < count( self::$product_ids ) ) {
+			shuffle( self::$product_ids );
+			self::$product_ids = array_slice( self::$product_ids, 0, 50 );
+		}
+
+		self::$product_ids[] = $product->get_id();
+
+		/**
+		 * Action: Product generator returned a new product.
+		 *
+		 * @since 1.2.0
+		 *
+		 * @param \WC_Product $product
+		 */
+		do_action( 'smoothgenerator_product_generated', $product );
+
+		return $product;
+	}
+
+	/**
+	 * Create multiple products.
+	 *
+	 * @param int   $amount   The number of products to create.
+	 * @param array $args     Additional args for product creation.
+	 *
+	 * @return int[]|\WP_Error
+	 */
+	public static function batch( $amount, array $args = array() ) {
+		$amount = self::validate_batch_amount( $amount );
+		if ( is_wp_error( $amount ) ) {
+			return $amount;
+		}
+
+		$use_existing_terms = ! empty( $args['use-existing-terms'] );
+		if ( ! $use_existing_terms ) {
+			self::maybe_generate_terms( $amount );
+		}
+
+		$product_ids = array();
+
+		for ( $i = 1; $i <= $amount; $i++ ) {
+			$product = self::generate( true, $args );
+
+			// Skip products that failed to generate.
+			if ( is_wp_error( $product ) ) {
+				continue;
+			}
+
+			$product_ids[] = $product->get_id();
+		}
+
+		// In case multiple batches are being run in one request, refresh the cache data.
+		RandomRuntimeCache::clear( 'product_cat' );
+		RandomRuntimeCache::clear( 'product_tag' );
+		RandomRuntimeCache::clear( 'product_brand' );
+
+		return $product_ids;
+	}
+
+	/**
+	 * Create a new global attribute.
+	 *
+	 * @param string $raw_name Attribute name (label).
+	 * @return int Attribute ID.
+	 */
+	protected static function create_global_attribute( $raw_name ) {
+		$slug = wc_sanitize_taxonomy_name( $raw_name );
+
+		$attribute_id = wc_create_attribute( array(
+			'name'         => $raw_name,
+			'slug'         => $slug,
+			'type'         => 'select',
+			'order_by'     => 'menu_order',
+			'has_archives' => false,
+		) );
+
+		$taxonomy_name = wc_attribute_taxonomy_name( $slug );
+		register_taxonomy(
+			$taxonomy_name,
+			apply_filters( 'woocommerce_taxonomy_objects_' . $taxonomy_name, array( 'product' ) ),
+			apply_filters( 'woocommerce_taxonomy_args_' . $taxonomy_name, array(
+				'labels'       => array(
+					'name' => $raw_name,
+				),
+				'hierarchical' => true,
+				'show_ui'      => false,
+				'query_var'    => true,
+				'rewrite'      => false,
+			) )
+		);
+
+		self::$global_attributes[ $raw_name ] = isset( self::$global_attributes[ $raw_name ] ) ? self::$global_attributes[ $raw_name ] : array();
+
+		delete_transient( 'wc_attribute_taxonomies' );
+
+		return $attribute_id;
+	}
+
+	/**
+	 * Generate attributes for a product.
+	 *
+	 * @param integer $qty Number of attributes to generate.
+	 * @param integer $maximum_terms Maximum number of terms per attribute to generate.
+	 * @return array|\WP_Error Array of attributes or WP_Error on failure.
+	 */
+	protected static function generate_attributes( $qty = 1, $maximum_terms = 10 ) {
+		$used_names = array();
+		$attributes = array();
+
+		for ( $i = 0; $i < $qty; $i++ ) {
+			$attribute = new \WC_Product_Attribute();
+			$attribute->set_id( 0 );
+			$attribute->set_position( $i );
+			$attribute->set_visible( true );
+			$attribute->set_variation( true );
+
+			if ( self::$faker->boolean() ) {
+				$raw_name = array_rand( self::$global_attributes );
+
+				if ( in_array( $raw_name, $used_names, true ) ) {
+					$raw_name = ucfirst( substr( self::$faker->word(), 0, 28 ) );
+				}
+
+				$attribute_labels = wp_list_pluck( wc_get_attribute_taxonomies(), 'attribute_label', 'attribute_name' );
+				$attribute_name   = array_search( $raw_name, $attribute_labels, true );
+
+				if ( ! $attribute_name ) {
+					$attribute_name = wc_sanitize_taxonomy_name( $raw_name );
+				}
+
+				$attribute_id = wc_attribute_taxonomy_id_by_name( $attribute_name );
+
+				if ( ! $attribute_id ) {
+					$attribute_id = self::create_global_attribute( $raw_name );
+
+					// Check if attribute creation failed.
+					if ( is_wp_error( $attribute_id ) ) {
+						return $attribute_id;
+					}
+				}
+
+				$slug          = wc_sanitize_taxonomy_name( $raw_name );
+				$taxonomy_name = wc_attribute_taxonomy_name( $slug );
+
+				$attribute->set_name( $taxonomy_name );
+				$attribute->set_id( $attribute_id );
+
+				$used_names[] = $raw_name;
+
+				$num_values      = self::$faker->numberBetween( 1, $maximum_terms );
+				$values          = array();
+				$existing_values = isset( self::$global_attributes[ $raw_name ] ) ? self::$global_attributes[ $raw_name ] : array();
+
+				for ( $j = 0; $j < $num_values; $j++ ) {
+					$value = '';
+
+					if ( self::$faker->boolean( 80 ) && ! empty( $existing_values ) ) {
+						shuffle( $existing_values );
+						$value = array_pop( $existing_values );
+					}
+
+					if ( empty( $value ) || in_array( $value, $values, true ) ) {
+						$value = ucfirst( self::$faker->words( self::$faker->numberBetween( 1, 2 ), true ) );
+					}
+
+					self::$global_attributes[ $raw_name ][] = $value;
+
+					$values[] = $value;
+				}
+				$attribute->set_options( $values );
+			} else {
+				$attribute->set_name( ucfirst( self::$faker->words( self::$faker->numberBetween( 1, 3 ), true ) ) );
+				$attribute->set_options( array_filter( self::$faker->words( self::$faker->numberBetween( 2, 4 ), false ) ), 'ucfirst' );
+			}
+			$attributes[] = $attribute;
+		}
+
+		return $attributes;
+	}
+
+	/**
+	 * Check whether WooCommerce Bookings is active.
+	 *
+	 * Delegates to Booking::is_bookings_active() as the single source of truth.
+	 *
+	 * @return bool
+	 */
+	protected static function is_bookings_active() {
+		return Booking::is_bookings_active();
+	}
+
+	/**
+	 * Returns a product type to generate. If no type is specified, or an invalid type is specified,
+	 * a weighted random type is returned.
+	 *
+	 * @param array $assoc_args CLI arguments.
+	 * @return string A product type.
+	 */
+	protected static function get_product_type( array $assoc_args ) {
+		$type  = $assoc_args['type'] ?? null;
+		$types = array(
+			'simple',
+			'variable',
+		);
+
+		if ( self::is_bookings_active() ) {
+			$types[] = 'booking';
+		}
+
+		if ( Booking::is_bookings_experimental_active() ) {
+			$types[] = 'bookable-service';
+			$types[] = 'bookable-event';
+		}
+
+		if ( ! is_null( $type ) && in_array( $type, $types, true ) ) {
+			return $type;
+		}
+
+		// If the user explicitly requested a booking type but the dependency is inactive,
+		// pass it through so the downstream generator can surface a clear WP_Error.
+		if ( in_array( $type, array( 'booking', 'bookable-service', 'bookable-event' ), true ) ) {
+			return $type;
+		}
+
+		return self::random_weighted_element( array(
+			'simple'   => 80,
+			'variable' => 20,
+		) );
+	}
+
+	/**
+	 * Generate a variable product and return it.
+	 *
+	 * @return \WC_Product_Variable|\WP_Error Product object or WP_Error on failure.
+	 */
+	protected static function generate_variable_product() {
+		$name              = ucwords( self::$faker->productName );
+		$will_manage_stock = self::$faker->boolean();
+		$product           = new \WC_Product_Variable();
+
+		$gallery    = self::maybe_get_gallery_image_ids();
+		$attributes = self::generate_attributes( self::$faker->numberBetween( 1, 3 ), 5 );
+
+		// Check if attribute generation failed.
+		if ( is_wp_error( $attributes ) ) {
+			return $attributes;
+		}
+
+		$product->set_props( array(
+			'name'              => $name,
+			'featured'          => self::$faker->boolean( 10 ),
+			'sku'               => sanitize_title( $name ) . '-' . self::$faker->ean8,
+			'global_unique_id'  => self::$faker->randomElement( array( self::$faker->ean13, self::$faker->isbn10 ) ),
+			'attributes'        => $attributes,
+			'tax_status'        => self::$faker->randomElement( array( 'taxable', 'shipping', 'none' ) ),
+			'tax_class'         => '',
+			'manage_stock'      => $will_manage_stock,
+			'stock_quantity'    => $will_manage_stock ? self::$faker->numberBetween( -100, 100 ) : null,
+			'stock_status'      => 'instock',
+			'backorders'        => self::$faker->randomElement( array( 'yes', 'no', 'notify' ) ),
+			'sold_individually' => self::$faker->boolean( 20 ),
+			'upsell_ids'        => self::get_existing_product_ids(),
+			'cross_sell_ids'    => self::get_existing_product_ids(),
+			'image_id'          => self::get_image(),
+			'category_ids'      => self::get_term_ids( 'product_cat', self::$faker->numberBetween( 0, 3 ) ),
+			'tag_ids'           => self::get_term_ids( 'product_tag', self::$faker->numberBetween( 0, 5 ) ),
+			'gallery_image_ids' => $gallery,
+			'reviews_allowed'   => self::$faker->boolean(),
+			'purchase_note'     => self::$faker->boolean() ? self::$faker->text() : '',
+			'menu_order'        => self::$faker->numberBetween( 0, 10000 ),
+		) );
+		// Need to save to get an ID for variations.
+		$product->save();
+
+		// Create variations, one for each attribute value combination.
+		$variation_attributes = wc_list_pluck( array_filter( $product->get_attributes(), 'wc_attributes_array_filter_variation' ), 'get_slugs' );
+		$possible_attributes  = array_reverse( wc_array_cartesian( $variation_attributes ) );
+		foreach ( $possible_attributes as $possible_attribute ) {
+			$price             = self::$faker->randomFloat( 2, 1, 1000 );
+			$is_on_sale        = self::$faker->boolean( 35 );
+			$has_sale_schedule = $is_on_sale && self::$faker->boolean( 40 ); // ~40% of on-sale variations have a schedule.
+			$sale_price        = $is_on_sale ? self::$faker->randomFloat( 2, 0, $price ) : '';
+			$date_on_sale_from = $has_sale_schedule ? self::$faker->dateTimeBetween( '-3 days', '+3 days' )->format( DATE_ATOM ) : '';
+			$date_on_sale_to   = $has_sale_schedule ? self::$faker->dateTimeBetween( '+4 days', '+4 months' )->format( DATE_ATOM ) : '';
+			$is_virtual        = self::$faker->boolean( 20 );
+			$variation         = new \WC_Product_Variation();
+			$variation->set_props( array(
+				'parent_id'         => $product->get_id(),
+				'attributes'        => $possible_attribute,
+				'regular_price'     => $price,
+				'sale_price'        => $sale_price,
+				'date_on_sale_from' => $date_on_sale_from,
+				'date_on_sale_to'   => $date_on_sale_to,
+				'tax_status'        => self::$faker->randomElement( array( 'taxable', 'shipping', 'none' ) ),
+				'tax_class'         => '',
+				'manage_stock'      => $will_manage_stock,
+				'stock_quantity'    => $will_manage_stock ? self::$faker->numberBetween( -20, 100 ) : null,
+				'stock_status'      => 'instock',
+				'weight'            => $is_virtual ? '' : self::$faker->numberBetween( 1, 200 ),
+				'length'            => $is_virtual ? '' : self::$faker->numberBetween( 1, 200 ),
+				'width'             => $is_virtual ? '' : self::$faker->numberBetween( 1, 200 ),
+				'height'            => $is_virtual ? '' : self::$faker->numberBetween( 1, 200 ),
+				'virtual'           => $is_virtual,
+				'downloadable'      => false,
+				'image_id'          => self::get_image(),
+			) );
+
+			// Set COGS if the feature is enabled.
+			if ( wc_get_container()->get( 'Automattic\WooCommerce\Internal\CostOfGoodsSold\CostOfGoodsSoldController' )->feature_is_enabled() ) {
+				$variation->set_props( array( 'cogs_value' => round( $price * ( 1 - self::$faker->numberBetween( 15, 60 ) / 100 ), 2 ) ) );
+			}
+
+			$variation->save();
+		}
+		$data_store = $product->get_data_store();
+		$data_store->sort_all_product_variations( $product->get_id() );
+
+		return $product;
+	}
+
+	/**
+	 * Generate a simple product and return it.
+	 *
+	 * @return \WC_Product
+	 */
+	protected static function generate_simple_product() {
+		$name              = ucwords( self::$faker->productName );
+		$will_manage_stock = self::$faker->boolean();
+		$is_virtual        = self::$faker->boolean();
+		$price             = self::$faker->randomFloat( 2, 1, 1000 );
+		$is_on_sale        = self::$faker->boolean( 35 );
+		$has_sale_schedule = $is_on_sale && self::$faker->boolean( 40 ); // ~40% scheduled, rest indefinite.
+		$sale_price        = $is_on_sale ? self::$faker->randomFloat( 2, 0, $price ) : '';
+		$date_on_sale_from = $has_sale_schedule ? self::$faker->dateTimeBetween( '-3 days', '+3 days' )->format( DATE_ATOM ) : '';
+		$date_on_sale_to   = $has_sale_schedule ? self::$faker->dateTimeBetween( '+4 days', '+4 months' )->format( DATE_ATOM ) : '';
+		$product           = new \WC_Product();
+
+		$image_id = self::get_image();
+		$gallery  = self::maybe_get_gallery_image_ids();
+
+		$product->set_props( array(
+			'name'               => $name,
+			'featured'           => self::$faker->boolean(),
+			'catalog_visibility' => 'visible',
+			'description'        => self::$faker->paragraphs( self::$faker->numberBetween( 1, 5 ), true ),
+			'short_description'  => self::$faker->text(),
+			'sku'                => sanitize_title( $name ) . '-' . self::$faker->ean8,
+			'global_unique_id'   => self::$faker->randomElement( array( self::$faker->ean13, self::$faker->isbn10 ) ),
+			'regular_price'      => $price,
+			'sale_price'         => $sale_price,
+			'date_on_sale_from'  => $date_on_sale_from,
+			'date_on_sale_to'    => $date_on_sale_to,
+			'total_sales'        => self::$faker->numberBetween( 0, 10000 ),
+			'tax_status'         => self::$faker->randomElement( array( 'taxable', 'shipping', 'none' ) ),
+			'tax_class'          => '',
+			'manage_stock'       => $will_manage_stock,
+			'stock_quantity'     => $will_manage_stock ? self::$faker->numberBetween( -100, 100 ) : null,
+			'stock_status'       => 'instock',
+			'backorders'         => self::$faker->randomElement( array( 'yes', 'no', 'notify' ) ),
+			'sold_individually'  => self::$faker->boolean( 20 ),
+			'weight'             => $is_virtual ? '' : self::$faker->numberBetween( 1, 200 ),
+			'length'             => $is_virtual ? '' : self::$faker->numberBetween( 1, 200 ),
+			'width'              => $is_virtual ? '' : self::$faker->numberBetween( 1, 200 ),
+			'height'             => $is_virtual ? '' : self::$faker->numberBetween( 1, 200 ),
+			'upsell_ids'         => self::get_existing_product_ids(),
+			'cross_sell_ids'     => self::get_existing_product_ids(),
+			'parent_id'          => 0,
+			'reviews_allowed'    => self::$faker->boolean(),
+			'purchase_note'      => self::$faker->boolean() ? self::$faker->text() : '',
+			'menu_order'         => self::$faker->numberBetween( 0, 10000 ),
+			'virtual'            => $is_virtual,
+			'downloadable'       => false,
+			'category_ids'       => self::get_term_ids( 'product_cat', self::$faker->numberBetween( 0, 3 ) ),
+			'tag_ids'            => self::get_term_ids( 'product_tag', self::$faker->numberBetween( 0, 5 ) ),
+			'shipping_class_id'  => 0,
+			'image_id'           => $image_id,
+			'gallery_image_ids'  => $gallery,
+		) );
+
+		// Set COGS if the feature is enabled.
+		if ( wc_get_container()->get( 'Automattic\WooCommerce\Internal\CostOfGoodsSold\CostOfGoodsSoldController' )->feature_is_enabled() ) {
+			$product->set_props( array( 'cogs_value' => round( $price * ( 1 - self::$faker->numberBetween( 15, 60 ) / 100 ), 2 ) ) );
+		}
+
+		return $product;
+	}
+
+	/**
+	 * Names for bookable product generation.
+	 *
+	 * @var array
+	 */
+	protected static $booking_product_names = array(
+		'hourly' => array(
+			'Private Consultation',
+			'Photography Session',
+			'Personal Training',
+			'Tutoring Session',
+			'Therapy Appointment',
+			'Music Lesson',
+			'Yoga Class',
+			'Massage Session',
+			'Career Coaching',
+			'Language Lesson',
+		),
+		'daily'  => array(
+			'Equipment Rental',
+			'Venue Booking',
+			'Car Rental',
+			'Vacation Cabin',
+			'Meeting Room',
+			'Studio Rental',
+			'Boat Rental',
+			'Campsite Reservation',
+		),
+	);
+
+	/**
+	 * Names for bookable service products.
+	 *
+	 * @var array
+	 */
+	protected static $bookable_service_names = array(
+		'Express Haircut',
+		'Oil Change Service',
+		'Pet Grooming',
+		'Phone Screen Repair',
+		'Dry Cleaning Pickup',
+		'Car Wash & Detail',
+		'Key Cutting Service',
+		'Passport Photo Service',
+		'Bike Tune-Up',
+		'Shoe Repair',
+	);
+
+	/**
+	 * Names for bookable event products.
+	 *
+	 * @var array
+	 */
+	protected static $bookable_event_names = array(
+		'Live Concert',
+		'Weekend Workshop',
+		'Wine Tasting Evening',
+		'Charity Gala',
+		'Tech Conference',
+		'Cooking Masterclass',
+		'Open Mic Night',
+		'Outdoor Movie Screening',
+		'Networking Mixer',
+		'Art Exhibition Opening',
+	);
+
+	/**
+	 * Generate a bookable product (WC_Product_Booking) and return it.
+	 *
+	 * Requires WooCommerce Bookings to be active.
+	 *
+	 * @return \WC_Product_Booking|\WP_Error Product object or WP_Error on failure.
+	 */
+	protected static function generate_booking_product() {
+		if ( ! self::is_bookings_active() ) {
+			return new \WP_Error(
+				'smoothgenerator_missing_bookings',
+				'WooCommerce Bookings extension is not active. Cannot generate booking products.'
+			);
+		}
+
+		$is_daily      = self::$faker->boolean( 40 );
+		$duration_unit = $is_daily ? 'day' : 'hour';
+		$duration      = $is_daily ? self::$faker->numberBetween( 1, 3 ) : self::$faker->numberBetween( 1, 4 );
+		$cost          = $is_daily
+			? self::$faker->numberBetween( 50, 500 )
+			: self::$faker->numberBetween( 25, 200 );
+
+		$name_pool = $is_daily ? self::$booking_product_names['daily'] : self::$booking_product_names['hourly'];
+		$name      = $name_pool[ array_rand( $name_pool ) ];
+
+		$has_persons   = self::$faker->boolean( 40 );
+		$has_resources = self::$faker->boolean( 30 );
+
+		$product = new \WC_Product_Booking();
+
+		$image_id = self::get_image();
+
+		$product->set_props( array(
+			'name'               => $name,
+			'featured'           => self::$faker->boolean( 10 ),
+			'catalog_visibility' => 'visible',
+			'description'        => self::$faker->paragraphs( self::$faker->numberBetween( 1, 3 ), true ),
+			'short_description'  => self::$faker->sentence(),
+			'sku'                => sanitize_title( $name ) . '-' . self::$faker->ean8,
+			'regular_price'      => $cost,
+			'image_id'           => $image_id,
+			'category_ids'       => self::get_term_ids( 'product_cat', self::$faker->numberBetween( 0, 2 ) ),
+			'tag_ids'            => self::get_term_ids( 'product_tag', self::$faker->numberBetween( 0, 3 ) ),
+		) );
+
+		// Booking-specific settings.
+		$product->set_duration_type( 'fixed' );
+		$product->set_duration_unit( $duration_unit );
+		$product->set_duration( $duration );
+		$product->set_cost( $cost );
+
+		// Availability window: bookable from now to 90 days in the future.
+		$product->set_min_date_value( 0 );
+		$product->set_min_date_unit( 'day' );
+		$product->set_max_date_value( self::$faker->numberBetween( 30, 180 ) );
+		$product->set_max_date_unit( 'day' );
+		$product->set_default_date_availability( 'available' );
+
+		// Cancellation.
+		$product->set_user_can_cancel( self::$faker->boolean( 60 ) );
+
+		// Person support.
+		if ( $has_persons ) {
+			$min_persons = self::$faker->numberBetween( 1, 2 );
+			$max_persons = self::$faker->numberBetween( $min_persons + 1, 20 );
+
+			$product->set_has_persons( true );
+			$product->set_min_persons( $min_persons );
+			$product->set_max_persons( $max_persons );
+			$product->set_has_person_cost_multiplier( self::$faker->boolean( 70 ) );
+		}
+
+		$product->set_status( 'publish' );
+		$product->save();
+
+		// Add resources after save (they need a product ID).
+		if ( $has_resources && method_exists( $product, 'set_has_resources' ) ) {
+			self::add_booking_resources( $product );
+		}
+
+		return $product;
+	}
+
+	/**
+	 * Generate a bookable service product using the real WC_Product_Bookable_Service class.
+	 *
+	 * Requires WooCommerce Bookings with experimental features enabled
+	 * (WC_BOOKINGS_EXPERIMENTAL_ENABLED). The class enforces: virtual, fixed duration
+	 * in minutes, default date availability = non-available, resources assignment = customer.
+	 *
+	 * @return \WC_Product_Bookable_Service|\WP_Error Product object or WP_Error on failure.
+	 */
+	protected static function generate_bookable_service_product() {
+		if ( ! Booking::is_bookings_experimental_active() ) {
+			return new \WP_Error(
+				'smoothgenerator_missing_bookings_experimental',
+				'WooCommerce Bookings experimental features are not active. The bookable-service type requires WC_BOOKINGS_EXPERIMENTAL_ENABLED.'
+			);
+		}
+
+		$name = self::$bookable_service_names[ array_rand( self::$bookable_service_names ) ];
+		$cost = self::$faker->numberBetween( 10, 100 );
+
+		$product = new \WC_Product_Bookable_Service();
+
+		$image_id = self::get_image();
+
+		$product->set_props( array(
+			'name'               => $name,
+			'featured'           => self::$faker->boolean( 10 ),
+			'catalog_visibility' => 'visible',
+			'description'        => self::$faker->paragraphs( self::$faker->numberBetween( 1, 2 ), true ),
+			'short_description'  => self::$faker->sentence(),
+			'sku'                => sanitize_title( $name ) . '-' . self::$faker->ean8,
+			'regular_price'      => $cost,
+			'image_id'           => $image_id,
+			'category_ids'       => self::get_term_ids( 'product_cat', self::$faker->numberBetween( 0, 2 ) ),
+			'tag_ids'            => self::get_term_ids( 'product_tag', self::$faker->numberBetween( 0, 3 ) ),
+		) );
+
+		// Duration is always in minutes for service products (enforced by the class).
+		$product->set_duration( self::$faker->randomElement( array( 15, 20, 30, 45, 60 ) ) );
+		$product->set_cost( $cost );
+
+		// Availability window.
+		$product->set_min_date_value( 0 );
+		$product->set_min_date_unit( 'day' );
+		$product->set_max_date_value( self::$faker->numberBetween( 14, 60 ) );
+		$product->set_max_date_unit( 'day' );
+
+		// Cancellation.
+		$product->set_user_can_cancel( self::$faker->boolean( 30 ) );
+
+		$product->set_status( 'publish' );
+		$product->save();
+
+		return $product;
+	}
+
+	/**
+	 * Generate a bookable event product using the real WC_Product_Bookable_Event class.
+	 *
+	 * Requires WooCommerce Bookings with experimental features enabled
+	 * (WC_BOOKINGS_EXPERIMENTAL_ENABLED).
+	 *
+	 * @return \WC_Product_Bookable_Event|\WP_Error Product object or WP_Error on failure.
+	 */
+	protected static function generate_bookable_event_product() {
+		if ( ! Booking::is_bookings_experimental_active() ) {
+			return new \WP_Error(
+				'smoothgenerator_missing_bookings_experimental',
+				'WooCommerce Bookings experimental features are not active. The bookable-event type requires WC_BOOKINGS_EXPERIMENTAL_ENABLED.'
+			);
+		}
+
+		$name = self::$bookable_event_names[ array_rand( self::$bookable_event_names ) ];
+		$cost = self::$faker->numberBetween( 15, 250 );
+
+		$product = new \WC_Product_Bookable_Event();
+
+		$image_id = self::get_image();
+
+		$product->set_props( array(
+			'name'               => $name,
+			'featured'           => self::$faker->boolean( 15 ),
+			'catalog_visibility' => 'visible',
+			'description'        => self::$faker->paragraphs( self::$faker->numberBetween( 1, 3 ), true ),
+			'short_description'  => self::$faker->sentence(),
+			'sku'                => sanitize_title( $name ) . '-' . self::$faker->ean8,
+			'regular_price'      => $cost,
+			'image_id'           => $image_id,
+			'category_ids'       => self::get_term_ids( 'product_cat', self::$faker->numberBetween( 0, 2 ) ),
+			'tag_ids'            => self::get_term_ids( 'product_tag', self::$faker->numberBetween( 0, 3 ) ),
+		) );
+
+		// Event-specific settings.
+		$product->set_duration_type( 'fixed' );
+		$product->set_duration_unit( 'hour' );
+		$product->set_duration( self::$faker->numberBetween( 1, 4 ) );
+		$product->set_cost( $cost );
+
+		// Availability window.
+		$product->set_min_date_value( 0 );
+		$product->set_min_date_unit( 'day' );
+		$product->set_max_date_value( self::$faker->numberBetween( 30, 120 ) );
+		$product->set_max_date_unit( 'day' );
+		$product->set_default_date_availability( 'available' );
+
+		// Events typically support persons (attendees).
+		$min_persons = 1;
+		$max_persons = self::$faker->numberBetween( 20, 200 );
+
+		$product->set_has_persons( true );
+		$product->set_min_persons( $min_persons );
+		$product->set_max_persons( $max_persons );
+		$product->set_has_person_cost_multiplier( true );
+
+		// Cancellation.
+		$product->set_user_can_cancel( self::$faker->boolean( 40 ) );
+
+		$product->set_status( 'publish' );
+		$product->save();
+
+		return $product;
+	}
+
+	/**
+	 * Add random resources to a bookable product.
+	 *
+	 * @param \WC_Product_Booking $product The bookable product.
+	 */
+	protected static function add_booking_resources( $product ) {
+		$resource_names = array(
+			'Room A',
+			'Room B',
+			'Room C',
+			'Court 1',
+			'Court 2',
+			'Court 3',
+			'Station Alpha',
+			'Station Beta',
+			'Bay 1',
+			'Bay 2',
+			'Bay 3',
+			'Bay 4',
+		);
+
+		$num_resources = self::$faker->numberBetween( 2, 4 );
+		shuffle( $resource_names );
+		$selected = array_slice( $resource_names, 0, $num_resources );
+
+		$product->set_has_resources( true );
+
+		$base_costs  = array();
+		$block_costs = array();
+
+		foreach ( $selected as $resource_name ) {
+			$resource = new \WC_Product_Booking_Resource();
+			$resource->set_name( $resource_name );
+			$resource->set_qty( self::$faker->numberBetween( 1, 5 ) );
+			$resource->save();
+
+			$product->add_resource( $resource );
+
+			// Resource costs are stored at the product level, not on the resource object.
+			$base_costs[ $resource->get_id() ]  = 0;
+			$block_costs[ $resource->get_id() ] = 0;
+		}
+
+		$product->set_resource_base_costs( $base_costs );
+		$product->set_resource_block_costs( $block_costs );
+		$product->save();
+	}
+
+	/**
+	 * Maybe generate a number of terms for use with products, if there aren't enough existing terms.
+	 *
+	 * Number of terms is determined by the number of products that will be generated.
+	 *
+	 * @param int $product_amount The number of products that will be generated.
+	 *
+	 * @return void
+	 */
+	protected static function maybe_generate_terms( int $product_amount ): void {
+		if ( $product_amount < 10 ) {
+			$cats      = 5;
+			$cat_depth = 1;
+			$tags      = 10;
+			$brands    = 5;
+		} elseif ( $product_amount < 50 ) {
+			$cats      = 10;
+			$cat_depth = 2;
+			$tags      = 20;
+			$brands    = 10;
+		} else {
+			$cats      = 20;
+			$cat_depth = 3;
+			$tags      = 40;
+			$brands    = 10;
+		}
+
+		$existing_cats = count( self::get_term_ids( 'product_cat', $cats ) );
+		if ( $existing_cats < $cats ) {
+			Term::batch( $cats - $existing_cats, 'product_cat', array( 'max-depth' => $cat_depth ) );
+			RandomRuntimeCache::clear( 'product_cat' );
+		}
+
+		$existing_tags = count( self::get_term_ids( 'product_tag', $tags ) );
+		if ( $existing_tags < $tags ) {
+			Term::batch( $tags - $existing_tags, 'product_tag' );
+			RandomRuntimeCache::clear( 'product_tag' );
+		}
+
+		$existing_brands = count( self::get_term_ids( 'product_brand', $brands ) );
+		if ( $existing_brands < $brands ) {
+			Term::batch( $brands - $existing_brands, 'product_brand' );
+			RandomRuntimeCache::clear( 'product_brand' );
+		}
+	}
+
+	/**
+	 * Get a number of random term IDs for a specific taxonomy.
+	 *
+	 * @param string $taxonomy The taxonomy to get terms for.
+	 * @param int    $limit    The number of term IDs to get. Maximum value of 50.
+	 *
+	 * @return array
+	 */
+	protected static function get_term_ids( string $taxonomy, int $limit ): array {
+		if ( $limit <= 0 ) {
+			return array();
+		}
+
+		if ( ! RandomRuntimeCache::exists( $taxonomy ) ) {
+			$args = array(
+				'taxonomy'   => $taxonomy,
+				'number'     => 50,
+				'orderby'    => 'count',
+				'order'      => 'ASC',
+				'hide_empty' => false,
+				'fields'     => 'ids',
+			);
+
+			if ( 'product_cat' === $taxonomy ) {
+				$uncategorized = get_term_by( 'slug', 'uncategorized', 'product_cat' );
+				if ( $uncategorized ) {
+					$args['exclude'] = $uncategorized->term_id;
+				}
+			}
+
+			$term_ids = get_terms( $args );
+
+			RandomRuntimeCache::set( $taxonomy, $term_ids );
+		}
+
+		RandomRuntimeCache::shuffle( $taxonomy );
+
+		return RandomRuntimeCache::get( $taxonomy, $limit );
+	}
+
+	/**
+	 * Generate an image gallery.
+	 *
+	 * @return array
+	 */
+	protected static function maybe_get_gallery_image_ids() {
+		$gallery = array();
+
+		$create_gallery = self::$faker->boolean( 10 );
+
+		if ( ! $create_gallery ) {
+			return;
+		}
+
+		$image_count = wp_rand( 0, 3 );
+
+		for ( $i = 0; $i < $image_count; $i++ ) {
+			$gallery[] = self::get_image();
+		}
+
+		return $gallery;
+	}
+
+	/**
+	 * Get some random existing product IDs.
+	 *
+	 * @param int $limit Number of term IDs to get.
+	 * @return array
+	 */
+	protected static function get_existing_product_ids( $limit = 5 ) {
+		if ( ! self::$product_ids ) {
+			self::$product_ids = wc_get_products(
+				array(
+					'limit'   => $limit,
+					'return'  => 'ids',
+					'status'  => 'publish',
+					'orderby' => 'rand',
+				)
+			);
+		}
+
+		$random_limit = wp_rand( 0, $limit );
+
+		if ( ! $random_limit ) {
+			return array();
+		}
+
+		shuffle( self::$product_ids );
+
+		return array_slice( self::$product_ids, 0, min( count( self::$product_ids ), $random_limit ) );
+	}
+}

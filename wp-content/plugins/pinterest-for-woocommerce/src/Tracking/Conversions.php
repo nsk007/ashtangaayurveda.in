@@ -1,0 +1,475 @@
+<?php
+/**
+ * Pinterest for WooCommerce Tracking. Conversions API.
+ *
+ * @package     Pinterest_For_WooCommerce/Classes/
+ * @version     1.0.0
+ */
+
+namespace Automattic\WooCommerce\Pinterest\Tracking;
+
+use Automattic\WooCommerce\Pinterest\API\APIV5;
+use Automattic\WooCommerce\Pinterest\Logger;
+use Automattic\WooCommerce\Pinterest\Tracking\Data\Category;
+use Automattic\WooCommerce\Pinterest\Tracking\Data\Checkout;
+use Automattic\WooCommerce\Pinterest\Tracking\Data\None;
+use Automattic\WooCommerce\Pinterest\Tracking\Data\Product;
+use Automattic\WooCommerce\Pinterest\Tracking\Data\Search;
+use Automattic\WooCommerce\Pinterest\Tracking\Data\User;
+use Exception;
+use Throwable;
+
+/**
+ * Pinterest Conversions API support.
+ */
+class Conversions extends Tracker {
+
+	/**
+	 * Session key used to persist the Pinterest click ID.
+	 *
+	 * @var string
+	 */
+	private const CLICK_ID_SESSION_KEY = 'pinterest_for_woocommerce_click_id';
+
+	/**
+	 * Maximum accepted click ID length in bytes. Longer values are discarded.
+	 *
+	 * @var int
+	 */
+	private const CLICK_ID_MAX_LENGTH = 512;
+
+	/**
+	 * User data for the Conversions API.
+	 *
+	 * @var User
+	 */
+	private $user;
+
+	/**
+	 * URL where the event occurred.
+	 *
+	 * @var string
+	 */
+	private $event_source_url;
+
+	/**
+	 * Pinterest Conversions API class constructor.
+	 *
+	 * @param User   $user             User data object to hold ip address and agent string.
+	 * @param string $event_source_url Optional URL where the event occurred.
+	 */
+	public function __construct( User $user, string $event_source_url = '' ) {
+		$this->user             = $user;
+		$this->event_source_url = esc_url_raw( $event_source_url, array( 'http', 'https' ) );
+	}
+
+	/**
+	 * Track event function implementation. Used to send event data to a destination.
+	 *
+	 * @param string $event_name Tracking event name.
+	 * @param Data   $data       Tracking event data class.
+	 *
+	 * @throws Throwable In case of an API error, after logging it at error level.
+	 *
+	 * @return bool True after a dispatch, false when the event was skipped because no ad account is configured.
+	 */
+	public function track_event( string $event_name, Data $data ) {
+		$data = $this->prepare_request_data( $event_name, $data );
+
+		try {
+			if ( ! $this->send_request( $event_name, $data ) ) {
+				return false;
+			}
+
+			$messages = sprintf(
+				'Sending Pinterest Conversions API event %s.',
+				$event_name
+			);
+			Logger::log( $messages, 'debug', 'conversions' );
+
+			return true;
+		} catch ( Throwable $e ) {
+			$messages = sprintf(
+				'Sending Pinterest Conversions API event %1$s has failed with the error %2$d code and %3$s message',
+				$event_name,
+				$e->getCode(),
+				// The upstream message is free text: keep it on one line and bounded.
+				mb_substr( sanitize_text_field( $e->getMessage() ), 0, 200 )
+			);
+			Logger::log( $messages, 'error', 'conversions' );
+
+			throw $e;
+		}
+	}
+
+	/**
+	 * Prepares event data for the request.
+	 *
+	 * @since 1.4.0
+	 *
+	 * @param string $event_name Tracking event name.
+	 * @param Data   $data       Tracking event data.
+	 *
+	 * @return array Prepared data.
+	 */
+	public function prepare_request_data( string $event_name, Data $data ) {
+		$event_name = static::EVENT_MAP[ $event_name ] ?? '';
+		$method     = "get_{$event_name}_data";
+		if ( method_exists( $this, $method ) ) {
+			$prepared_data = call_user_func( array( $this, $method ), $data );
+		} else {
+			$prepared_data = array(
+				'event_id' => $data->get_event_id(),
+			);
+		}
+
+		return array_merge( $prepared_data, $this->get_default_data( $event_name ) );
+	}
+
+	/**
+	 * Prepares default event data.
+	 *
+	 * @param string $event_name Tracking event name.
+	 *
+	 * @return array Common data for every event.
+	 */
+	private function get_default_data( string $event_name ) {
+		global $wp;
+
+		$event_source_url = $this->event_source_url ? $this->event_source_url : home_url( $wp->request );
+
+		$data = array(
+			'event_name'       => $event_name,
+			'action_source'    => 'web',
+			'event_time'       => time(),
+			'event_source_url' => $event_source_url,
+			'partner_name'     => 'ss-woocommerce',
+			'user_data'        => array(
+				'client_ip_address' => $this->user->get_client_ip_address(),
+				'client_user_agent' => $this->user->get_client_user_agent(),
+			),
+			'language'         => 'en',
+		);
+
+		$email = self::maybe_get_hashed_customer_email();
+		if ( false !== $email ) {
+			$data['user_data']['em'] = array( $email );
+		}
+
+		$external_id = self::maybe_get_hashed_customer_external_id();
+		if ( false !== $external_id ) {
+			$data['user_data']['external_id'] = array( $external_id );
+		}
+
+		$click_id = self::maybe_get_click_id( $this->event_source_url );
+		if ( false !== $click_id ) {
+			$data['user_data']['click_id'] = $click_id;
+		}
+
+		return $data;
+	}
+
+	/**
+	 * Prepares data for the checkout event.
+	 *
+	 * @see Conversions::prepare_request_data()
+	 * @since 1.4.0
+	 *
+	 * @param Checkout $data Checkout data.
+	 *
+	 * @return array Prepared checkout event specific data.
+	 */
+	private function get_checkout_data( Checkout $data ) {
+		return array(
+			'event_id'    => $data->get_event_id(),
+			'custom_data' => array(
+				'order_id'    => (string) $data->get_order_id(),
+				'currency'    => $data->get_currency(),
+				'value'       => (string) $data->get_price(),
+				'content_ids' => array_map(
+					function ( Product $product ) {
+						return (string) $product->get_id();
+					},
+					$data->get_items()
+				),
+				'contents'    => array_map(
+					function ( Product $product ) {
+						return array(
+							'id'         => (string) $product->get_id(),
+							'item_price' => (string) $product->get_price(),
+							'quantity'   => (int) $product->get_quantity(),
+						);
+					},
+					$data->get_items()
+				),
+				'num_items'   => (int) $data->get_quantity(),
+			),
+		);
+	}
+
+	/**
+	 * Returns the hashed email of the current user if any.
+	 *
+	 * @return string|false Hashed email or false if not available.
+	 */
+	private static function maybe_get_hashed_customer_email() {
+		$user_email = '';
+		if ( is_user_logged_in() ) {
+			$user       = wp_get_current_user();
+			$user_email = $user->user_email;
+		}
+		if ( empty( $user_email ) ) {
+			$session_customer = function_exists( 'WC' ) && isset( WC()->session ) ? WC()->session->get( 'customer' ) : false;
+			$user_email       = $session_customer ? $session_customer['email'] : '';
+		}
+		return $user_email ? hash( 'sha256', $user_email ) : false;
+	}
+
+	/**
+	 * Returns the Pinterest click ID for the current visitor.
+	 *
+	 * The landing-page `epik` parameter is the freshest source. Beacon requests
+	 * carry the landing page as the event source URL, so its query string is
+	 * checked before the current request. Pinterest's `_epik` cookie and the
+	 * WooCommerce session retain the click ID for later events.
+	 *
+	 * @param string $event_source_url Optional URL where the event occurred.
+	 *
+	 * @return string|false Click ID, or false if it is unavailable.
+	 */
+	private static function maybe_get_click_id( string $event_source_url = '' ) {
+		$click_id = self::get_click_id_from_url( $event_source_url );
+
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only attribution parameter.
+		if ( false === $click_id && isset( $_GET['epik'] ) && is_string( $_GET['epik'] ) ) {
+			$click_id = self::normalize_click_id( wp_unslash( $_GET['epik'] ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized in normalize_click_id().
+		}
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
+
+		if ( false === $click_id && isset( $_COOKIE['_epik'] ) && is_string( $_COOKIE['_epik'] ) ) {
+			$click_id = self::normalize_click_id( wp_unslash( $_COOKIE['_epik'] ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitized in normalize_click_id().
+		}
+
+		$session = function_exists( 'WC' ) && isset( WC()->session ) ? WC()->session : false;
+		if ( false !== $click_id ) {
+			if ( $session ) {
+				$session->set( self::CLICK_ID_SESSION_KEY, $click_id );
+			}
+
+			return $click_id;
+		}
+
+		if ( ! $session ) {
+			return false;
+		}
+
+		$stored   = $session->get( self::CLICK_ID_SESSION_KEY );
+		$click_id = self::normalize_click_id( $stored );
+		if ( false === $click_id && null !== $stored ) {
+			// Evict values stored before validation existed so they stop being re-serialized.
+			$session->__unset( self::CLICK_ID_SESSION_KEY );
+		}
+
+		return $click_id;
+	}
+
+	/**
+	 * Normalizes a visitor-supplied click ID.
+	 *
+	 * Values changed by sanitize_text_field() are discarded rather than stored
+	 * mutated, and over-length values are discarded rather than truncated: in
+	 * both cases the result could not match anything at Pinterest.
+	 *
+	 * @param mixed $value Raw click ID value.
+	 *
+	 * @return string|false Click ID, or false when empty, mutated by sanitization or longer than CLICK_ID_MAX_LENGTH.
+	 */
+	private static function normalize_click_id( $value ) {
+		if ( ! is_string( $value ) ) {
+			return false;
+		}
+
+		// Bound the length before sanitizing: sanitize_text_field() decodes percent
+		// sequences in a loop, so an unbounded value is expensive to clean up, and an
+		// over-length value should be reported whether or not sanitizing would alter it.
+		if ( strlen( $value ) > self::CLICK_ID_MAX_LENGTH ) {
+			Logger::log( sprintf( 'Discarding Pinterest click ID longer than %d bytes.', self::CLICK_ID_MAX_LENGTH ), 'debug', 'conversions' );
+			return false;
+		}
+
+		$sanitized = sanitize_text_field( $value );
+		if ( $sanitized !== $value || '' === $sanitized ) {
+			return false;
+		}
+
+		return $sanitized;
+	}
+
+	/**
+	 * Extracts the Pinterest click ID from the query string of an event source URL.
+	 *
+	 * @param string $event_source_url URL where the event occurred.
+	 *
+	 * @return string|false Click ID, or false if the URL does not carry one.
+	 */
+	private static function get_click_id_from_url( string $event_source_url ) {
+		$query = wp_parse_url( $event_source_url, PHP_URL_QUERY );
+		if ( ! $query ) {
+			return false;
+		}
+
+		wp_parse_str( $query, $params );
+
+		return self::normalize_click_id( $params['epik'] ?? null );
+	}
+
+	/**
+	 * Prepares data for add to cart event.
+	 *
+	 * @see Conversions::prepare_request_data()
+	 * @since 1.4.0
+	 *
+	 * @param Product $data Product data.
+	 *
+	 * @return array Prepared add to cart event specific data.
+	 */
+	private function get_add_to_cart_data( Product $data ) {
+		return array(
+			'event_id'    => $data->get_event_id(),
+			'custom_data' => array(
+				'currency'    => $data->get_currency(),
+				'value'       => (string) ( $data->get_price() * $data->get_quantity() ),
+				'content_ids' => array( (string) $data->get_id() ),
+				'contents'    => array(
+					array(
+						'id'         => (string) $data->get_id(),
+						'item_price' => (string) $data->get_price(),
+						'quantity'   => (int) $data->get_quantity(),
+					),
+				),
+				'num_items'   => (int) $data->get_quantity(),
+			),
+		);
+	}
+
+	/**
+	 * Prepares data for view category event.
+	 *
+	 * @see Conversions::prepare_request_data()
+	 * @since 1.4.0
+	 *
+	 * @param Category $data Category data.
+	 *
+	 * @return array Prepared view category event specific data.
+	 */
+	private function get_view_category_data( Category $data ) {
+		return array(
+			'event_id' => $data->get_event_id(),
+		);
+	}
+
+	/**
+	 * Prepares data for page visit event.
+	 *
+	 * @see Conversions::prepare_request_data()
+	 * @since 1.4.0
+	 *
+	 * @param Product|None $data Product or None data.
+	 *
+	 * @return array Prepared page visit event specific data.
+	 */
+	private function get_page_visit_data( Data $data ) {
+		if ( $data instanceof None ) {
+			return array(
+				'event_id' => $data->get_event_id(),
+			);
+		}
+
+		return array(
+			'event_id'    => $data->get_event_id(),
+			'custom_data' => array(
+				'currency'    => $data->get_currency(),
+				'value'       => (string) ( $data->get_price() * $data->get_quantity() ),
+				'content_ids' => array( (string) $data->get_id() ),
+				'contents'    => array(
+					array(
+						'id'         => (string) $data->get_id(),
+						'item_price' => (string) $data->get_price(),
+						'quantity'   => (int) $data->get_quantity(),
+					),
+				),
+				'num_items'   => (int) $data->get_quantity(),
+			),
+		);
+	}
+
+	/**
+	 * Prepares data for the search event.
+	 *
+	 * @see Conversions::prepare_request_data()
+	 * @since 1.4.0
+	 *
+	 * @param Search $data Search data.
+	 *
+	 * @return array Prepared search event specific data.
+	 */
+	private function get_search_data( Search $data ) {
+		return array(
+			'event_id'    => $data->get_event_id(),
+			'custom_data' => array(
+				'search_string' => $data->get_search_query(),
+			),
+		);
+	}
+
+	/**
+	 * Sends request to Pinterest Conversions API.
+	 *
+	 * @since 1.4.0
+	 *
+	 * @param string $event_name Event name.
+	 * @param array  $data       Event data.
+	 *
+	 * @throws Throwable|Exception If any exception during the request happen.|If response was not successful enough.
+	 * @return bool False when no ad account is configured, true after a successful dispatch.
+	 */
+	private function send_request( string $event_name, array $data ) {
+		$ad_account_id = Pinterest_For_WooCommerce()::get_setting( 'tracking_advertiser' );
+		if ( empty( $ad_account_id ) ) {
+			Logger::log( 'Skipping Pinterest Conversions API event ' . $event_name . ': no ad account (tracking_advertiser) is configured.', 'debug', 'conversions' );
+			return false;
+		}
+
+		$response = APIV5::send_conversions_api_event( $ad_account_id, $data );
+
+		// Processing the call results.
+		$is_error = isset( $response['code'] );
+		// Successful requests do not have a code nor a message.
+		if ( $is_error ) {
+			throw new Exception(
+				sprintf(
+					/* translators: 1. the error message as returned by the Pinterest API */
+					esc_html__( 'Error: $1%s', 'pinterest-for-woocommerce' ),
+					esc_html( $response['message'] )
+				),
+				(int) $response['code']
+			);
+		} else {
+			$data    = $response['events'][0] ?? array();
+			$status  = $data['status'] ?? 'failed';
+			$message = $data['error_message'] ?? $data['warning_message'] ?? 'Unknown';
+			if ( 'failed' === $status ) {
+				throw new Exception(
+					sprintf(
+						/* translators: 1. the error message as returned by the Pinterest API */
+						esc_html__( 'Error: $1%s', 'pinterest-for-woocommerce' ),
+						esc_html( $message )
+					),
+					0
+				);
+			}
+		}
+
+		return true;
+	}
+}

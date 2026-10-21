@@ -1,0 +1,17 @@
+vendor/
+node_modules/
+wc-smooth-generator.zip
+wc-smooth-generator/
+
+# PHPStorm
+.idea
+
+# PHPCS
+.phpcs.xml
+phpcs.xml
+
+# PHPUnit
+.phpunit.result.cache
+
+# PHP xdebug
+.vscode/launch.json

@@ -1,0 +1,403 @@
+/*
+Theme Name: Ashtanga Store
+Theme URI: https://ashtangaayurveda.in/
+Author: Ashtanga
+Description: A lightweight, shop-first block theme for Ashtanga herbal care.
+Requires at least: 6.5
+Requires PHP: 7.4
+Version: 1.0.0
+Text Domain: ashtanga-store
+*/
+
+:root {
+	--ashtanga-forest: #2c5e3b;
+	--ashtanga-leaf: #4a7c59;
+	--ashtanga-ink: #202923;
+	--ashtanga-muted: #67736a;
+	--ashtanga-paper: #f6f8f4;
+	--ashtanga-line: #e3e9e2;
+	--ashtanga-page: #ffffff;
+	--ashtanga-surface: #ffffff;
+	--ashtanga-surface-soft: #f6f8f4;
+	--ashtanga-text: #202923;
+	--ashtanga-text-muted: #67736a;
+	--ashtanga-border: #d9e2d8;
+	--ashtanga-focus: #4a7c59;
+	--ashtanga-control-radius: 6px;
+	--ashtanga-control-height: 46px;
+	color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+	margin: 0;
+	background: var(--ashtanga-page);
+	color: var(--ashtanga-text);
+	font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+	font-size: 16px;
+	line-height: 1.55;
+}
+a { color: var(--ashtanga-forest); text-underline-offset: .18em; }
+a:hover { color: var(--ashtanga-leaf); }
+button, input, select, textarea { font: inherit; }
+input[type="text"], input[type="email"], input[type="tel"], input[type="search"], input[type="number"], input[type="password"], select, textarea {
+	min-height: var(--ashtanga-control-height);
+	border: 1px solid var(--ashtanga-border);
+	border-radius: var(--ashtanga-control-radius);
+	background-color: var(--ashtanga-surface);
+	color: var(--ashtanga-text);
+}
+input[type="checkbox"], input[type="radio"] { accent-color: var(--ashtanga-forest); }
+:where(button, input, select, textarea, a):focus-visible { outline: 3px solid color-mix(in srgb, var(--ashtanga-focus) 55%, transparent); outline-offset: 2px; }
+::placeholder { color: var(--ashtanga-text-muted); opacity: 1; }
+.wp-site-blocks { overflow: clip; }
+.ashtanga-header {
+	position: sticky;
+	top: 0;
+	z-index: 20;
+	width: 100vw;
+	margin-left: calc(50% - 50vw);
+	border-bottom: 1px solid var(--ashtanga-line);
+	background: color-mix(in srgb, var(--ashtanga-surface) 96%, transparent);
+	backdrop-filter: blur(12px);
+}
+.ashtanga-header__inner {
+	display: grid;
+	grid-template-columns: 44px 156px minmax(260px, 1fr) auto;
+	align-items: center;
+	gap: 28px;
+	width: min(1280px, calc(100% - 48px));
+	min-height: 82px;
+	margin-inline: auto;
+}
+.ashtanga-header__inner > p, .ashtanga-search br { display: none; }
+.ashtanga-menu-trigger, .ashtanga-menu__close {
+	display: inline-grid;
+	width: 44px;
+	height: 44px;
+	place-items: center;
+	border: 1px solid var(--ashtanga-border);
+	border-radius: var(--ashtanga-control-radius);
+	background: var(--ashtanga-surface);
+	color: var(--ashtanga-text);
+	cursor: pointer;
+}
+.ashtanga-menu-trigger:hover, .ashtanga-menu__close:hover { border-color: var(--ashtanga-leaf); background: var(--ashtanga-surface-soft); }
+.ashtanga-menu {
+	position: fixed;
+	inset: 0 auto 0 0;
+	width: min(390px, 90vw);
+	max-width: none;
+	height: 100dvh;
+	max-height: none;
+	margin: 0;
+	padding: 24px;
+	border: 0;
+	border-right: 1px solid var(--ashtanga-border);
+	background: var(--ashtanga-surface);
+	color: var(--ashtanga-text);
+	box-shadow: 18px 0 48px rgba(15, 33, 19, .18);
+	overflow-y: auto;
+}
+.ashtanga-menu[open] { display: flex; flex-direction: column; animation: ashtanga-menu-open .2s ease-out both; }
+.ashtanga-menu::backdrop { background: rgba(13, 23, 15, .56); backdrop-filter: blur(2px); }
+.ashtanga-menu__heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding-bottom: 21px; border-bottom: 1px solid var(--ashtanga-border); }
+.ashtanga-menu__heading h2 { margin: 0; color: var(--ashtanga-forest); font-family: Georgia, "Times New Roman", serif; font-size: 24px; font-weight: 500; }
+.ashtanga-menu__nav { display: grid; align-content: start; padding-top: 12px; }
+.ashtanga-menu__link, .ashtanga-menu__group > summary {
+	display: flex;
+	min-height: 50px;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	border-bottom: 1px solid var(--ashtanga-border);
+	color: var(--ashtanga-text);
+	font-size: 16px;
+	font-weight: 700;
+	text-decoration: none;
+}
+.ashtanga-menu__group > summary { cursor: pointer; list-style: none; }
+.ashtanga-menu__group > summary::-webkit-details-marker { display: none; }
+.ashtanga-menu__group > summary::after { width: 8px; height: 8px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; content: ""; transform: rotate(45deg) translateY(-2px); transition: transform .18s ease; }
+.ashtanga-menu__group[open] > summary::after { transform: rotate(225deg) translate(-2px, -1px); }
+.ashtanga-menu__submenu { display: grid; gap: 2px; padding: 7px 0 10px 14px; border-bottom: 1px solid var(--ashtanga-border); }
+.ashtanga-menu__submenu a, .ashtanga-menu__policies a { display: flex; min-height: 42px; align-items: center; color: var(--ashtanga-text-muted); font-size: 14px; text-decoration: none; }
+.ashtanga-menu__submenu a:hover, .ashtanga-menu__policies a:hover, .ashtanga-menu__link:hover, .ashtanga-menu__group > summary:hover { color: var(--ashtanga-leaf); }
+.ashtanga-menu__cart span { display: inline-grid; min-width: 24px; height: 24px; place-items: center; border-radius: 50%; background: var(--ashtanga-forest); color: var(--ashtanga-surface); font-size: 12px; }
+.ashtanga-menu__policies { display: flex; gap: 22px; margin-top: auto; padding-top: 28px; }
+@keyframes ashtanga-menu-open { from { opacity: .7; transform: translateX(-18px); } to { opacity: 1; transform: translateX(0); } }
+.ashtanga-brand { display: flex; align-items: center; }
+.ashtanga-brand img { display: block; width: 156px; height: auto; }
+.ashtanga-search { position: relative; display: flex; align-items: center; width: min(100%, 620px); justify-self: center; }
+.ashtanga-search input[type="search"] {
+	width: 100%;
+	min-height: 44px;
+	padding: 10px 48px 10px 16px;
+	border: 1px solid var(--ashtanga-border);
+	border-radius: var(--ashtanga-control-radius);
+	background: var(--ashtanga-surface-soft);
+	color: var(--ashtanga-text);
+}
+.ashtanga-search button {
+	position: absolute;
+	top: 5px;
+	right: 5px;
+	width: 34px;
+	height: 34px;
+	border: 0;
+	background: transparent;
+	color: var(--ashtanga-forest);
+	cursor: pointer;
+}
+.ashtanga-nav { display: flex; align-items: center; gap: 20px; white-space: nowrap; }
+.ashtanga-nav a { color: var(--ashtanga-ink); font-size: 14px; font-weight: 700; text-decoration: none; }
+.ashtanga-nav a:hover { color: var(--ashtanga-leaf); }
+.ashtanga-nav .ashtanga-cart { display: inline-flex; align-items: center; gap: 7px; color: var(--ashtanga-forest); }
+.ashtanga-cart-count { display: inline-grid; min-width: 20px; height: 20px; place-items: center; border-radius: 50%; background: var(--ashtanga-forest); color: white; font-size: 11px; }
+.ashtanga-hero {
+	position: relative;
+	isolation: isolate;
+	width: 100vw;
+	margin-left: calc(50% - 50vw);
+	min-height: 410px;
+	display: grid;
+	align-items: center;
+	background: #eef3ea;
+}
+.ashtanga-main.is-layout-constrained > .ashtanga-hero { width: 100vw !important; max-width: none !important; margin-left: calc(50% - 50vw) !important; margin-right: calc(50% - 50vw) !important; }
+.ashtanga-hero::before {
+	position: absolute;
+	z-index: -1;
+	inset: 0;
+	background: linear-gradient(90deg, rgba(246,248,244,.96) 0%, rgba(246,248,244,.88) 44%, rgba(246,248,244,.12) 100%), url("assets/images/hero-botanical.jpg") center 48% / cover;
+	content: "";
+}
+.ashtanga-hero__inner { width: min(1180px, calc(100% - 48px)); margin: 0 auto; padding-block: 76px; }
+.ashtanga-eyebrow { margin: 0 0 14px; color: var(--ashtanga-leaf); font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.ashtanga-hero h1 { max-width: 620px; margin: 0; color: var(--ashtanga-forest); font-family: Georgia, "Times New Roman", serif; font-size: 60px; font-weight: 500; line-height: 1.06; }
+.ashtanga-hero p:not(.ashtanga-eyebrow) { max-width: 480px; margin: 18px 0 26px; color: #4e5d51; font-size: 17px; }
+.ashtanga-button, .ashtanga-products .add_to_cart_button, .ashtanga-products .product_type_simple {
+	display: inline-flex;
+	min-height: 45px;
+	align-items: center;
+	justify-content: center;
+	padding: 10px 20px;
+	border: 1px solid var(--ashtanga-forest);
+	border-radius: 2px;
+	background: var(--ashtanga-forest);
+	color: white;
+	font-size: 14px;
+	font-weight: 700;
+	text-decoration: none;
+}
+.ashtanga-button { min-height: var(--ashtanga-control-height); border-radius: var(--ashtanga-control-radius); transition: background-color .2s ease, transform .2s ease, box-shadow .2s ease; }
+.ashtanga-button:hover, .ashtanga-products .add_to_cart_button:hover, .ashtanga-products .product_type_simple:hover { background: #1d482c; color: white; transform: translateY(-2px); box-shadow: 0 8px 18px rgba(35,75,46,.18); }
+.ashtanga-main { width: min(1280px, calc(100% - 48px)) !important; max-width: none !important; margin-inline: auto; }
+.ashtanga-departments { display: flex; gap: 10px; overflow-x: auto; padding: 26px 0 8px; }
+.ashtanga-departments a { flex: 0 0 auto; padding: 9px 15px; border: 1px solid var(--ashtanga-line); border-radius: 99px; color: var(--ashtanga-forest); font-size: 13px; font-weight: 700; text-decoration: none; }
+.ashtanga-departments a:hover { border-color: var(--ashtanga-leaf); background: #f2f6f0; }
+.ashtanga-section { width: 100%; max-width: none !important; padding: 38px 0 12px; scroll-margin-top: 100px; }
+.ashtanga-section__heading { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 19px; }
+.ashtanga-section h2 { margin: 0; color: var(--ashtanga-forest); font-family: Georgia, "Times New Roman", serif; font-size: 32px; font-weight: 500; }
+.ashtanga-section__heading p { margin: 3px 0 0; color: var(--ashtanga-muted); font-size: 14px; }
+.ashtanga-products ul.products { display: grid !important; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 22px 16px; margin: 0 !important; }
+.ashtanga-products ul.products::before, .ashtanga-products ul.products::after { display: none !important; }
+.ashtanga-products ul.products li.product { position: relative; float: none !important; width: auto !important; margin: 0 !important; padding: 10px 10px 16px; border: 1px solid transparent; border-radius: 3px; transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease, background-color .22s ease; }
+.ashtanga-products ul.products li.product:hover, .ashtanga-products ul.products li.product:focus-within { transform: translateY(-4px); border-color: var(--ashtanga-line); background: #fff; box-shadow: 0 14px 28px rgba(37,61,43,.10); }
+.ashtanga-products ul.products li.product a img { width: 100%; aspect-ratio: 1 / 1; margin: 0 0 12px !important; object-fit: contain; background: #f4f5ef; }
+.ashtanga-products ul.products li.product .onsale { position: absolute; top: 18px; left: 18px; z-index: 1; min-height: 0; padding: 5px 8px; border-radius: 2px; background: #a54e37; color: #fff; font-size: 10px; line-height: 1; }
+.ashtanga-products ul.products li.product .woocommerce-loop-product__title { min-height: 2.7em; padding: 0 !important; color: var(--ashtanga-ink); font-size: 15px !important; font-weight: 700; line-height: 1.35; }
+.ashtanga-products .ashtanga-size { margin: 4px 0 7px; color: var(--ashtanga-muted); font-size: 12px; }
+.ashtanga-products ul.products li.product .price { display: block; min-height: 25px; margin: 0 0 10px !important; color: var(--ashtanga-forest) !important; font-size: 16px !important; font-weight: 800; }
+.ashtanga-products ul.products li.product .price del { margin-right: 5px; color: #7b847d !important; font-size: 12px; font-weight: 400; }
+.ashtanga-products ul.products li.product .price ins { text-decoration: none; }
+.ashtanga-products ul.products li.product .button { display: flex; width: 100%; float: none; min-height: 40px; margin: 8px 0 0 !important; padding: 9px 12px; font-size: 12px; transition: background-color .2s ease, transform .2s ease; }
+.ashtanga-about { display: grid; grid-template-columns: 1fr 1fr; gap: 36px; align-items: center; margin: 58px 0 64px; padding: 38px; background: var(--ashtanga-paper); }
+.ashtanga-about h2 { margin: 0 0 12px; color: var(--ashtanga-forest); font-family: Georgia, "Times New Roman", serif; font-size: 31px; font-weight: 500; }
+.ashtanga-about p { margin: 0; color: #536057; }
+.ashtanga-about__note { border-left: 2px solid var(--ashtanga-leaf); padding-left: 22px; color: var(--ashtanga-forest) !important; font-family: Georgia, "Times New Roman", serif; font-size: 22px; line-height: 1.4; }
+.ashtanga-footer { margin-top: 46px; background: #203e2b; color: #eef3ea; }
+.ashtanga-footer__inner { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 42px; width: min(1280px, calc(100% - 48px)); margin-inline: auto; padding: 42px 0 30px; }
+.ashtanga-footer h2, .ashtanga-footer h3 { margin: 0 0 12px; color: white; font-family: Georgia, "Times New Roman", serif; font-size: 21px; font-weight: 500; }
+.ashtanga-footer p { margin: 5px 0; color: #d4e0d4; font-size: 13px; }
+.ashtanga-footer a { color: #e6efdf; }
+.ashtanga-footer__links { display: grid; gap: 8px; font-size: 13px; }
+.ashtanga-footer__bottom { border-top: 1px solid rgba(255,255,255,.16); padding: 13px 24px; color: #d4e0d4; font-size: 12px; text-align: center; }
+.ashtanga-content { width: min(900px, calc(100% - 48px)); margin: 48px auto 72px; }
+.ashtanga-content h1, .ashtanga-content h2 { color: var(--ashtanga-forest); font-family: Georgia, "Times New Roman", serif; font-weight: 500; }
+.ashtanga-content h1 { font-size: 42px; }
+.ashtanga-content h2 { margin-top: 1.7em; font-size: 27px; }
+.ashtanga-woocommerce-archive { width: min(1280px, calc(100% - 48px)) !important; max-width: none !important; }
+.ashtanga-cart-page, .ashtanga-checkout-page { width: min(1120px, calc(100% - 48px)) !important; max-width: none !important; }
+.woocommerce .woocommerce-breadcrumb { color: var(--ashtanga-muted); font-size: 13px; }
+.woocommerce .woocommerce-breadcrumb a { color: var(--ashtanga-forest); }
+.woocommerce div.product p.price, .woocommerce div.product span.price { color: var(--ashtanga-forest); }
+.woocommerce div.product form.cart .button, .woocommerce a.button, .woocommerce button.button, .woocommerce input.button { border-radius: 2px; background: var(--ashtanga-forest); color: #fff; }
+.woocommerce-message { border-top-color: var(--ashtanga-leaf); }
+.ashtanga-woocommerce-archive > .wp-block-group { gap: 20px; align-items: center; margin-block: 22px; }
+.ashtanga-woocommerce-archive .wp-block-woocommerce-product-collection { margin-top: 12px; }
+.ashtanga-woocommerce-archive .wc-block-product-template { gap: 22px 16px !important; }
+.ashtanga-woocommerce-archive .wc-block-product { min-width: 0; padding: 10px; border: 1px solid transparent; border-radius: 3px; transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease; }
+.ashtanga-woocommerce-archive .wc-block-product:hover, .ashtanga-woocommerce-archive .wc-block-product:focus-within { transform: translateY(-4px); border-color: var(--ashtanga-line); box-shadow: 0 14px 28px rgba(37,61,43,.10); }
+.ashtanga-woocommerce-archive .wc-block-components-product-image img { aspect-ratio: 1; object-fit: contain; background: #f4f5ef; }
+.ashtanga-woocommerce-archive .wp-block-post-title a { color: var(--ashtanga-ink); font-weight: 700; text-decoration: none; }
+.ashtanga-woocommerce-archive .wp-block-woocommerce-product-price { color: var(--ashtanga-forest); font-weight: 800; }
+.ashtanga-woocommerce-archive .wp-block-woocommerce-product-button .wp-block-button__link { min-height: 42px; padding: 10px 12px; border-radius: 2px; background: var(--ashtanga-forest); font-size: 13px; }
+.ashtanga-single-product .wp-block-columns { gap: 44px; align-items: flex-start; }
+.ashtanga-single-product .wp-block-post-title { color: var(--ashtanga-forest); font-family: Georgia, "Times New Roman", serif; font-weight: 500; }
+.ashtanga-single-product .wp-block-woocommerce-product-price { margin-block: 16px; color: var(--ashtanga-forest); font-size: 24px; font-weight: 800; }
+.ashtanga-single-product .wp-block-post-excerpt { color: #4f5c52; }
+.ashtanga-checkout-page .wc-block-checkout { gap: 40px; }
+.ashtanga-checkout-page .wc-block-components-checkout-step__heading h2 { color: var(--ashtanga-forest); font-family: Georgia, "Times New Roman", serif; font-size: 23px; font-weight: 500; }
+.ashtanga-checkout-page .wc-block-components-text-input input, .ashtanga-checkout-page .wc-block-components-combobox .components-combobox-control__input, .ashtanga-checkout-page .wc-block-components-address-form select { border-radius: 3px; }
+.ashtanga-checkout-page .wc-block-components-text-input input:focus, .ashtanga-checkout-page .wc-block-components-combobox .components-combobox-control__input:focus, .ashtanga-checkout-page .wc-block-components-address-form select:focus { border-color: var(--ashtanga-leaf); box-shadow: 0 0 0 2px rgba(74,124,89,.15); }
+.ashtanga-checkout-page .wc-block-components-checkout-place-order-button { min-height: 48px; border-radius: 2px; background: var(--ashtanga-forest); font-weight: 700; }
+.ashtanga-cart-page .wc-block-cart__submit-button { min-height: 46px; border-radius: 2px; background: var(--ashtanga-forest); font-weight: 700; }
+
+.ashtanga-content :is(input[type="text"], input[type="email"], input[type="tel"], input[type="search"], input[type="number"], input[type="password"], select, textarea),
+.ashtanga-main :is(input[type="text"], input[type="email"], input[type="tel"], input[type="search"], input[type="number"], select, textarea),
+.ashtanga-checkout-page .wc-block-components-text-input input,
+.ashtanga-checkout-page .wc-block-components-combobox .components-combobox-control__input,
+.ashtanga-checkout-page .wc-block-components-address-form select {
+	min-height: var(--ashtanga-control-height);
+	border: 1px solid var(--ashtanga-border);
+	border-radius: var(--ashtanga-control-radius);
+	background-color: var(--ashtanga-surface);
+	color: var(--ashtanga-text);
+}
+.ashtanga-content :is(input, select, textarea):focus,
+.ashtanga-main :is(input, select, textarea):focus,
+.ashtanga-checkout-page .wc-block-components-text-input input:focus,
+.ashtanga-checkout-page .wc-block-components-combobox .components-combobox-control__input:focus,
+.ashtanga-checkout-page .wc-block-components-address-form select:focus {
+	border-color: var(--ashtanga-focus);
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--ashtanga-focus) 20%, transparent);
+	outline: 0;
+}
+.ashtanga-content :is(button, .button, .wp-element-button, input[type="submit"], input[type="button"]),
+.ashtanga-main :is(button, .button, .wp-element-button, input[type="submit"], input[type="button"]) {
+	min-height: 44px;
+	border-radius: var(--ashtanga-control-radius);
+}
+
+@media (max-width: 980px) {
+	.ashtanga-header__inner { grid-template-columns: 42px 140px minmax(160px, 1fr) auto; gap: 12px; min-height: 72px; padding-block: 10px; }
+	.ashtanga-brand img { width: 140px; }
+	.ashtanga-nav { justify-content: end; gap: 14px; }
+	.ashtanga-hero__inner { width: min(900px, calc(100% - 48px)); }
+	.ashtanga-hero h1 { font-size: 50px; }
+	.ashtanga-products ul.products { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+	.ashtanga-header__inner, .ashtanga-main, .ashtanga-hero__inner, .ashtanga-footer__inner { width: calc(100% - 32px); }
+	.ashtanga-header__inner { grid-template-columns: 42px minmax(0, 1fr) auto; grid-template-rows: 42px 42px; gap: 8px 10px; min-height: 0; padding-block: 10px; }
+	.ashtanga-menu-trigger { grid-column: 1; grid-row: 1; width: 42px; height: 42px; }
+	.ashtanga-brand img { width: 118px; }
+	.ashtanga-brand { grid-column: 2; grid-row: 1; width: 100%; }
+	.ashtanga-nav { grid-column: 3; grid-row: 1; gap: 12px; }
+	.ashtanga-nav a { font-size: 12px; }
+	.ashtanga-search { grid-column: 1 / -1; grid-row: 2; width: 100%; min-height: 42px; }
+	.ashtanga-search input[type="search"] { min-height: 42px; height: 42px; padding-block: 7px; }
+	.ashtanga-search button { top: 4px; }
+	.ashtanga-hero { min-height: 362px; }
+	.ashtanga-hero::before { background: linear-gradient(90deg, rgba(246,248,244,.96), rgba(246,248,244,.82)), url("assets/images/hero-botanical.jpg") 60% center / cover; }
+	.ashtanga-hero__inner { width: calc(100% - 40px); padding-block: 48px; }
+	.ashtanga-hero h1 { max-width: 460px; font-size: 42px; }
+	.ashtanga-hero p:not(.ashtanga-eyebrow) { font-size: 15px; }
+	.ashtanga-section { padding-top: 29px; }
+	.ashtanga-section h2 { font-size: 27px; }
+	.ashtanga-products ul.products { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 12px; }
+	.ashtanga-products ul.products li.product .button { width: 100%; }
+	.ashtanga-about { grid-template-columns: 1fr; gap: 19px; margin: 42px 0; padding: 24px; }
+	.ashtanga-about__note { font-size: 19px; }
+	.ashtanga-footer__inner { grid-template-columns: 1fr 1fr; gap: 28px 20px; }
+	.ashtanga-footer__inner > :first-child { grid-column: 1 / -1; }
+	.ashtanga-content { width: calc(100% - 32px); margin-top: 34px; }
+	.ashtanga-woocommerce-archive, .ashtanga-cart-page, .ashtanga-checkout-page { width: calc(100% - 32px) !important; }
+	.ashtanga-single-product .wp-block-columns { gap: 22px; }
+	.ashtanga-checkout-page .wc-block-checkout { gap: 24px; }
+	.ashtanga-content h1 { font-size: 34px; }
+}
+@media (prefers-reduced-motion: reduce) {
+	html { scroll-behavior: auto; }
+	*, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+	.ashtanga-menu[open] { animation: none; }
+}
+
+@media (prefers-color-scheme: dark) {
+	html { color-scheme: dark; }
+	:root {
+		--ashtanga-forest: #9bc49e;
+		--ashtanga-leaf: #b4d5ae;
+		--ashtanga-ink: #edf3eb;
+		--ashtanga-muted: #b4c0b4;
+		--ashtanga-paper: #202a23;
+		--ashtanga-line: #39473c;
+		--ashtanga-page: #151b17;
+		--ashtanga-surface: #1d2520;
+		--ashtanga-surface-soft: #252f28;
+		--ashtanga-text: #edf3eb;
+		--ashtanga-text-muted: #b4c0b4;
+		--ashtanga-border: #49594c;
+		--ashtanga-focus: #b4d5ae;
+		color-scheme: dark;
+	}
+	body { background: var(--ashtanga-page); color: var(--ashtanga-text); }
+	.ashtanga-header { border-color: var(--ashtanga-border); }
+	.ashtanga-cart-count { background: #b4d5ae; color: #17231a; }
+	.ashtanga-hero { background: #1c2920; }
+	.ashtanga-hero::before { background-image: linear-gradient(90deg, rgba(19,29,22,.92) 0%, rgba(19,29,22,.76) 44%, rgba(19,29,22,.2) 100%), url("assets/images/hero-botanical.jpg"); }
+	.ashtanga-hero h1, .ashtanga-hero p:not(.ashtanga-eyebrow), .ashtanga-eyebrow { color: var(--ashtanga-text); }
+	.ashtanga-products ul.products li.product:hover, .ashtanga-products ul.products li.product:focus-within,
+	.ashtanga-woocommerce-archive .wc-block-product:hover, .ashtanga-woocommerce-archive .wc-block-product:focus-within { background: var(--ashtanga-surface); }
+	.ashtanga-products ul.products li.product .woocommerce-loop-product__title,
+	.ashtanga-woocommerce-archive .wp-block-post-title a { color: var(--ashtanga-text); }
+	.ashtanga-products ul.products li.product .price del { color: var(--ashtanga-text-muted) !important; }
+	.ashtanga-about { background: var(--ashtanga-surface-soft); }
+	.ashtanga-about p, .ashtanga-about__note, .ashtanga-content h1, .ashtanga-content h2,
+	.ashtanga-single-product .wp-block-post-title, .ashtanga-single-product .wp-block-post-excerpt,
+	.ashtanga-checkout-page .wc-block-components-checkout-step__heading h2 { color: var(--ashtanga-text) !important; }
+	.ashtanga-footer { background: #101612; }
+	.ashtanga-footer, .ashtanga-footer p, .ashtanga-footer a, .ashtanga-footer__bottom { color: #e2ebe1; }
+	.ashtanga-content .wc-block-components-notice-banner,
+	.ashtanga-content .wc-block-components-totals-wrapper,
+	.ashtanga-content .wc-block-components-order-summary { background-color: var(--ashtanga-surface-soft); color: var(--ashtanga-text); }
+	.ashtanga-header { background: var(--ashtanga-surface); }
+	.ashtanga-search input[type="search"] { background: var(--ashtanga-surface-soft); color: var(--ashtanga-text); }
+	.ashtanga-nav a { color: var(--ashtanga-text); }
+	a { color: #b4d5ae; }
+	a:hover { color: #d5e8ce; }
+	:where(.ashtanga-content, .ashtanga-main) input,
+	:where(.ashtanga-content, .ashtanga-main) select,
+	:where(.ashtanga-content, .ashtanga-main) textarea,
+	.ashtanga-checkout-page .wc-block-components-text-input input,
+	.ashtanga-checkout-page .wc-block-components-combobox .components-combobox-control__input,
+	.ashtanga-checkout-page .wc-block-components-address-form select { background-color: var(--ashtanga-surface); color: var(--ashtanga-text); }
+	.ashtanga-checkout-page .wc-block-components-text-input input,
+	.ashtanga-checkout-page .wc-block-components-address-form input,
+	.ashtanga-checkout-page .wc-block-components-combobox .components-combobox-control__input {
+		border-color: var(--ashtanga-border) !important;
+		border-radius: var(--ashtanga-control-radius) !important;
+		background-color: var(--ashtanga-surface) !important;
+		color: var(--ashtanga-text) !important;
+	}
+	.ashtanga-checkout-page .wc-block-components-text-input label,
+	.ashtanga-checkout-page .wc-block-components-combobox label { color: var(--ashtanga-text-muted) !important; }
+	.ashtanga-checkout-page .wc-block-components-text-input input:focus,
+	.ashtanga-checkout-page .wc-block-components-address-form input:focus,
+	.ashtanga-checkout-page .wc-block-components-combobox .components-combobox-control__input:focus {
+		border-color: var(--ashtanga-focus) !important;
+		box-shadow: 0 0 0 3px color-mix(in srgb, var(--ashtanga-focus) 20%, transparent) !important;
+	}
+	.ashtanga-button, .ashtanga-products .add_to_cart_button, .ashtanga-products .product_type_simple,
+	.ashtanga-products ul.products li.product .button,
+	.ashtanga-woocommerce-archive .wp-block-woocommerce-product-button .wp-block-button__link,
+	.ashtanga-checkout-page .wc-block-components-checkout-place-order-button,
+	.ashtanga-cart-page .wc-block-cart__submit-button,
+	.woocommerce div.product form.cart .button, .woocommerce a.button, .woocommerce button.button, .woocommerce input.button {
+		border-color: #4a7c59;
+		background: #2c5e3b;
+		color: #ffffff;
+	}
+}

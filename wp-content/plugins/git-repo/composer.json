@@ -1,0 +1,81 @@
+{
+  "name": "woocommerce/wc-smooth-generator",
+  "description": "A smooth product, order, customer, and coupon generator for WooCommerce.",
+  "homepage": "https://woocommerce.com/",
+  "type": "wordpress-plugin",
+  "license": "GPL-3.0-or-later",
+  "prefer-stable": true,
+  "minimum-stability": "dev",
+  "require": {
+    "php": ">=7.4",
+    "psr/container": "1.0.0",
+    "composer/installers": "~1.2",
+    "fakerphp/faker": "^1.24.0",
+    "jdenticon/jdenticon": "^2.0.0",
+    "mbezhanov/faker-provider-collection": "^2.0.1",
+    "symfony/deprecation-contracts": "^2.2"
+  },
+  "require-dev": {
+    "woocommerce/woocommerce-sniffs": "*",
+    "sirbrillig/phpcs-changed": "^2.11.8",
+    "phpunit/phpunit": "^9.5 || ^10.0 || ^11.0",
+    "yoast/phpunit-polyfills": "^1.0 || ^2.0"
+  },
+  "autoload": {
+    "psr-4": {"WC\\SmoothGenerator\\": "includes/"}
+  },
+  "autoload-dev": {
+    "psr-4": {"WC\\SmoothGenerator\\Tests\\": "tests/Unit"}
+  },
+  "scripts": {
+    "test-unit": "./vendor/bin/phpunit",
+    "phpcs": [
+      "vendor/bin/phpcs"
+    ],
+    "phpcbf": [
+      "vendor/bin/phpcbf"
+    ],
+    "lint": [
+      "chg=$(git diff --relative --name-only -- '*.php'); [[ -z $chg ]] || phpcs-changed -s --git --git-unstaged $chg"
+    ],
+    "lint-staged": [
+      "chg=$(git diff HEAD --relative --name-only -- '*.php'); [[ -z $chg ]] || phpcs-changed -s --git $chg"
+    ],
+    "lint-branch": [
+      "sh ./bin/lint-branch.sh"
+    ]
+  },
+  "extra": {
+    "scripts-description": {
+      "phpcs": "Analyze code against the WordPress coding standards with PHP_CodeSniffer",
+      "phpcbf": "Fix coding standards warnings/errors automatically with PHP Code Beautifier"
+    }
+  },
+  "archive": {
+    "exclude": [
+      "/.github",
+      "/.husky",
+      "/bin",
+      "/node_modules",
+      "/tests",
+      "composer.*",
+      "package*.json",
+      "phpcs*",
+      "phpunit*",
+      "TESTING.md",
+      ".*",
+      "!vendor/autoload.php",
+      "!vendor/composer",
+      "!vendor/fakerphp",
+      "!vendor/jdenticon",
+      "!vendor/mbezhanov",
+      "!vendor/symfony"
+    ]
+  },
+  "config": {
+    "allow-plugins": {
+      "composer/installers": true,
+      "dealerdirect/phpcodesniffer-composer-installer": true
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+	"$schema": "https://schemas.wp.org/wp/6.7/theme.json",
+	"version": 3,
+	"settings": {
+		"appearanceTools": true,
+		"color": {
+			"defaultPalette": false,
+			"palette": [
+				{ "slug": "forest", "color": "#2c5e3b", "name": "Forest" },
+				{ "slug": "leaf", "color": "#4a7c59", "name": "Leaf" },
+				{ "slug": "ink", "color": "#202923", "name": "Ink" },
+				{ "slug": "paper", "color": "#f6f8f4", "name": "Soft white" },
+				{ "slug": "white", "color": "#ffffff", "name": "White" }
+			]
+		},
+		"layout": { "contentSize": "900px", "wideSize": "1280px" },
+		"typography": { "fluid": true, "defaultFontSizes": false }
+	},
+	"styles": {
+		"color": { "background": "#ffffff", "text": "#202923" },
+		"typography": { "fontFamily": "Trebuchet MS, Segoe UI, sans-serif", "fontSize": "16px", "lineHeight": "1.55" },
+		"elements": {
+			"link": { "color": { "text": "#2c5e3b" } },
+			"button": { "border": { "radius": "2px" }, "color": { "background": "#2c5e3b", "text": "#ffffff" }, "typography": { "fontSize": "14px", "fontWeight": "700" } }
+		}
+	}
+}

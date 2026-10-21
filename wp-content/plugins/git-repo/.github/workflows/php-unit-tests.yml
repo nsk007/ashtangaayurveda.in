@@ -1,0 +1,109 @@
+name: PHP Unit Tests
+
+on:
+    push:
+        branches:
+            - trunk
+        paths:
+            - '**.php'
+            - composer.json
+            - composer.lock
+            - phpunit.xml.dist
+            - tests/**
+            - .github/workflows/php-unit-tests.yml
+    pull_request:
+        paths:
+            - '**.php'
+            - composer.json
+            - composer.lock
+            - phpunit.xml.dist
+            - tests/**
+            - .github/workflows/php-unit-tests.yml
+    workflow_dispatch:
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    UnitTests:
+        name: PHP unit tests - PHP ${{ matrix.php }}, WP ${{ matrix.wp-version }}
+        runs-on: ubuntu-latest
+        env:
+            WP_CORE_DIR: '/tmp/wordpress/src'
+            WP_TESTS_DIR: '/tmp/wordpress/tests/phpunit'
+        strategy:
+            matrix:
+                php: ['7.4', '8.2', '8.5']
+                wp-version: ['latest']
+
+        services:
+            mysql:
+                image: mysql:8.0
+                env:
+                    MYSQL_ROOT_PASSWORD: root
+                    MYSQL_DATABASE: wordpress_test
+                ports:
+                    - 3306:3306
+                options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+            - name: Setup PHP
+              uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+              with:
+                  php-version: ${{ matrix.php }}
+                  extensions: mbstring, intl, mysql
+                  coverage: none
+                  tools: composer
+
+            - name: Install Composer dependencies
+              run: composer install --prefer-dist --no-progress
+
+            - name: Install SVN (used for installing WP versions)
+              run: sudo apt-get update && sudo apt-get install -y subversion
+
+            - name: Install WP tests
+              run: echo "y" | bash bin/install-wp-tests.sh wordpress_test root root 127.0.0.1 ${{ matrix.wp-version }}
+
+            - name: Install WooCommerce
+              run: |
+                  mkdir -p /tmp/wordpress/src/wp-content/plugins
+                  cd /tmp/wordpress/src/wp-content/plugins
+                  wget https://downloads.wordpress.org/plugin/woocommerce.latest-stable.zip
+                  unzip -q woocommerce.latest-stable.zip
+                  rm woocommerce.latest-stable.zip
+
+            - name: Run PHP unit tests
+              run: composer test-unit
+
+    PHPCS:
+        name: PHPCS
+        runs-on: ubuntu-latest
+        if: github.event_name == 'pull_request'
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+              with:
+                  fetch-depth: 0
+
+            - name: Setup PHP
+              uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+              with:
+                  php-version: '8.2'
+                  tools: composer
+
+            - name: Install Composer dependencies
+              run: composer install --prefer-dist --no-progress
+
+            - name: Get Changed Files
+              id: changed-files
+              uses: tj-actions/changed-files@716b1e13042866565e00e85fd4ec490e186c4a2f # v41
+              with:
+                  files: '**/*.php'
+
+            - name: Run PHPCS on changed files
+              if: steps.changed-files.outputs.any_changed == 'true'
+              run: vendor/bin/phpcs-changed -s --git --git-base ${{ github.event.pull_request.base.sha }} ${{ steps.changed-files.outputs.all_changed_files }}
