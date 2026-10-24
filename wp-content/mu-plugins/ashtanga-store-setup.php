@@ -5,9 +5,26 @@
  * Version: 1.0.0
  */
 
+require_once __DIR__ . '/includes/class-ashtanga-email-otp.php';
+
 add_action('admin_init', 'ashtanga_seed_store_once', 30);
 add_action('init', 'ashtanga_update_brand_copy_once', 40);
-add_action('init', 'ashtanga_enable_cod_once', 30);
+add_action('init', 'ashtanga_update_checkout_copy_once', 41);
+add_action('init', 'ashtanga_enforce_store_requirements', 30);
+add_action('init', 'ashtanga_add_estimated_product_shipping_data', 40);
+add_action('init', 'ashtanga_configure_shiprocket_shipping', 40);
+add_action('woocommerce_checkout_process', 'ashtanga_require_authenticated_classic_checkout');
+add_action('admin_notices', 'ashtanga_store_setup_notices');
+add_filter('woocommerce_available_payment_gateways', 'ashtanga_prepaid_gateways_only');
+add_filter('option_woocommerce_razorpay_settings', 'ashtanga_razorpay_settings_defaults');
+add_filter('rest_request_before_callbacks', 'ashtanga_require_authenticated_checkout', 10, 3);
+
+function ashtanga_local_checkout_testing_enabled() {
+	return function_exists('wp_get_environment_type')
+		&& 'local' === wp_get_environment_type()
+		&& defined('ASHTANGA_LOCAL_CHECKOUT_TESTING')
+		&& true === ASHTANGA_LOCAL_CHECKOUT_TESTING;
+}
 
 function ashtanga_update_brand_copy_once() {
 	if (get_option('ashtanga_brand_copy_v2')) {
@@ -34,25 +51,282 @@ function ashtanga_update_brand_copy_once() {
 	update_option('ashtanga_brand_copy_v2', gmdate('c'));
 }
 
-function ashtanga_enable_cod_once() {
-	if (get_option('ashtanga_cod_configured') || !function_exists('WC')) {
+function ashtanga_update_checkout_copy_once() {
+	if (get_option('ashtanga_checkout_copy_v1')) {
 		return;
 	}
-	$gateways = WC()->payment_gateways()->payment_gateways();
-	if (!isset($gateways['cod'])) {
+
+	$page = get_page_by_path('shipping-policy');
+	if ($page) {
+		$old_copy = 'We accept UPI, Google Pay, PhonePe, credit and debit cards, net banking, and Cash on Delivery (COD), subject to availability at checkout.';
+		$new_copy = 'Payment is accepted using the prepaid options shown at checkout. Cash on Delivery is not available.';
+		$content = str_replace($old_copy, $new_copy, $page->post_content);
+		if ($content !== $page->post_content) {
+			wp_update_post(['ID' => $page->ID, 'post_content' => $content]);
+		}
+	}
+
+	update_option('ashtanga_checkout_copy_v1', gmdate('c'));
+}
+
+function ashtanga_enforce_store_requirements() {
+	if (!class_exists('WooCommerce')) {
 		return;
 	}
+
+	$options = [
+		'woocommerce_default_country' => 'IN:KL',
+		'woocommerce_allowed_countries' => 'specific',
+		'woocommerce_specific_allowed_countries' => ['IN'],
+		'woocommerce_ship_to_countries' => 'specific',
+		'woocommerce_specific_ship_to_countries' => ['IN'],
+		'woocommerce_weight_unit' => 'kg',
+		'woocommerce_dimension_unit' => 'cm',
+		// Render checkout for the email sign-in form; checkout handlers still reject guests.
+		'woocommerce_enable_guest_checkout' => 'yes',
+		'woocommerce_enable_signup_and_login_from_checkout' => 'no',
+		'woocommerce_enable_myaccount_registration' => 'no',
+		'woocommerce_enable_checkout_login_reminder' => 'no',
+		'woocommerce_registration_generate_username' => 'yes',
+		'woocommerce_registration_generate_password' => 'yes',
+		'woocommerce_checkout_phone_field' => 'required',
+		'woocommerce_ship_to_destination' => 'shipping',
+	];
+	foreach ($options as $name => $value) {
+		if (get_option($name) !== $value) {
+			update_option($name, $value);
+		}
+	}
+
 	$current = get_option('woocommerce_cod_settings', []);
-	$settings = array_merge(is_array($current) ? $current : [], [
-		'enabled' => 'yes',
-		'title' => 'Cash on delivery',
-		'description' => 'Pay when your order is delivered.',
-		'instructions' => 'Please pay the delivery partner when your order arrives.',
-		'enable_for_methods' => [],
-		'enable_for_virtual' => 'no',
+	$current = is_array($current) ? $current : [];
+	$cod_enabled = ashtanga_local_checkout_testing_enabled() ? 'yes' : 'no';
+	if ($cod_enabled !== ($current['enabled'] ?? 'no')) {
+		$current['enabled'] = $cod_enabled;
+		update_option('woocommerce_cod_settings', $current);
+	}
+
+	$razorpay = get_option('woocommerce_razorpay_settings', []);
+	$razorpay = is_array($razorpay) ? $razorpay : [];
+	$razorpay['description'] = $razorpay['description'] ?? '';
+	$razorpay['enabled'] = !empty($razorpay['key_id']) && !empty($razorpay['key_secret']) ? 'yes' : 'no';
+	if ($razorpay !== get_option('woocommerce_razorpay_settings', [])) {
+		update_option('woocommerce_razorpay_settings', $razorpay);
+	}
+}
+
+function ashtanga_prepaid_gateways_only($gateways) {
+	$razorpay = get_option('woocommerce_razorpay_settings', []);
+	if (!is_array($razorpay) || empty($razorpay['key_id']) || empty($razorpay['key_secret'])) {
+		unset($gateways['razorpay']);
+	}
+
+	foreach (array_keys($gateways) as $gateway_id) {
+		if ('razorpay' !== $gateway_id && !(ashtanga_local_checkout_testing_enabled() && 'cod' === $gateway_id)) {
+			unset($gateways[$gateway_id]);
+		}
+	}
+	return $gateways;
+}
+
+function ashtanga_razorpay_settings_defaults($settings) {
+	if (!is_array($settings)) {
+		return [];
+	}
+	if (!isset($settings['description'])) {
+		$settings['description'] = '';
+	}
+	return $settings;
+}
+
+function ashtanga_require_authenticated_checkout($response, $handler, $request) {
+	if (is_wp_error($response) || 'POST' !== $request->get_method() || '/wc/store/v1/checkout' !== $request->get_route()) {
+		return $response;
+	}
+
+	function ashtanga_require_authenticated_classic_checkout() {
+		if (!is_user_logged_in()) {
+			wc_add_notice('Sign in with your email code before placing your order.', 'error');
+		}
+	}
+	if (!is_user_logged_in()) {
+		return new WP_Error('ashtanga_sign_in_required', 'Sign in with your email code before placing your order.', ['status' => 401]);
+	}
+	return $response;
+}
+
+function ashtanga_estimated_shipping_data($product_name, $size) {
+	$size = strtolower((string) $size);
+	$name = strtolower((string) $product_name);
+
+	if (str_contains($name, 'body wash')) {
+		return ['weight' => 0.65, 'length' => 22, 'width' => 8, 'height' => 8];
+	}
+	if (str_contains($size, '190gm')) {
+		return ['weight' => 0.30, 'length' => 12, 'width' => 10, 'height' => 7];
+	}
+	if (str_contains($size, '100gm') || str_contains($size, '100ml')) {
+		return ['weight' => 0.22, 'length' => 14, 'width' => 10, 'height' => 4];
+	}
+	if (str_contains($size, '80gm')) {
+		return ['weight' => 0.20, 'length' => 10, 'width' => 8, 'height' => 4];
+	}
+	if (str_contains($size, '50gm') || str_contains($size, '50ml')) {
+		return ['weight' => 0.15, 'length' => 8, 'width' => 6, 'height' => 6];
+	}
+	if (str_contains($size, '40gm')) {
+		return ['weight' => 0.12, 'length' => 12, 'width' => 8, 'height' => 3];
+	}
+	if (str_contains($size, '30ml')) {
+		return ['weight' => 0.10, 'length' => 10, 'width' => 5, 'height' => 5];
+	}
+	if (str_contains($size, '20gm')) {
+		return ['weight' => 0.08, 'length' => 8, 'width' => 6, 'height' => 5];
+	}
+	if (str_contains($size, '8gm') || str_contains($size, '2.5gm')) {
+		return ['weight' => 0.05, 'length' => 10, 'width' => 4, 'height' => 3];
+	}
+	if (str_contains($name, 'scrubber')) {
+		return ['weight' => 0.15, 'length' => 20, 'width' => 15, 'height' => 5];
+	}
+
+	return ['weight' => 0.18, 'length' => 10, 'width' => 8, 'height' => 4];
+}
+
+function ashtanga_set_estimated_shipping_data($product, $size = '', $replace_existing = false) {
+	$estimate = ashtanga_estimated_shipping_data($product->get_name(), $size);
+	if ($replace_existing || !$product->get_weight()) {
+		$product->set_weight(wc_get_weight($estimate['weight'], get_option('woocommerce_weight_unit', 'kg'), 'kg'));
+	}
+	if ($replace_existing || !$product->get_length()) {
+		$product->set_length(wc_get_dimension($estimate['length'], get_option('woocommerce_dimension_unit', 'cm'), 'cm'));
+	}
+	if ($replace_existing || !$product->get_width()) {
+		$product->set_width(wc_get_dimension($estimate['width'], get_option('woocommerce_dimension_unit', 'cm'), 'cm'));
+	}
+	if ($replace_existing || !$product->get_height()) {
+		$product->set_height(wc_get_dimension($estimate['height'], get_option('woocommerce_dimension_unit', 'cm'), 'cm'));
+	}
+}
+
+function ashtanga_add_estimated_product_shipping_data() {
+	if (!function_exists('wc_get_products') || get_option('ashtanga_shipping_estimates_added_v3')) {
+		return;
+	}
+
+	$replace_existing = (bool) (get_option('ashtanga_shipping_estimates_added') || get_option('ashtanga_shipping_estimates_added_v2'));
+	$product_ids = wc_get_products(['status' => 'publish', 'limit' => -1, 'return' => 'ids']);
+	foreach ($product_ids as $product_id) {
+		$product = wc_get_product($product_id);
+		if (!$product) {
+			continue;
+		}
+		ashtanga_set_estimated_shipping_data($product, $product->get_attribute('Size'), $replace_existing);
+		$product->save();
+	}
+
+	update_option('ashtanga_shipping_estimates_added_v3', gmdate('c'));
+}
+
+function ashtanga_configure_shiprocket_shipping() {
+	if (!class_exists('Shiprocket_Woocommerce_Shipping') || !class_exists('WC_Shipping_Zone')) {
+		return;
+	}
+
+	$settings = get_option('woocommerce_shiprocket_woocommerce_shipping_settings', []);
+	$settings = is_array($settings) ? $settings : [];
+	$settings = array_merge($settings, [
+		'integration_id' => $settings['integration_id'] ?? '',
+		'realtime_enabled' => 'yes',
+		'zone_wise_enabled' => 'yes',
+		'shipping_title' => '',
+		'fallback_rate' => '0',
+		'shipping_title_flat' => '',
+		'flat_rate' => '0',
 	]);
-	update_option('woocommerce_cod_settings', $settings);
-	update_option('ashtanga_cod_configured', gmdate('c'));
+	if ($settings !== get_option('woocommerce_shiprocket_woocommerce_shipping_settings', [])) {
+		update_option('woocommerce_shiprocket_woocommerce_shipping_settings', $settings);
+	}
+
+	$zone = null;
+	foreach (WC_Shipping_Zones::get_zones() as $zone_data) {
+		$candidate = new WC_Shipping_Zone((int) $zone_data['id']);
+		foreach ($candidate->get_zone_locations() as $location) {
+			if ('country' === $location->type && 'IN' === $location->code) {
+				$zone = $candidate;
+				break 2;
+			}
+		}
+	}
+	if (!$zone) {
+		$zone = new WC_Shipping_Zone();
+		$zone->set_zone_name('India');
+		$zone->add_location('IN', 'country');
+		$zone->save();
+	}
+
+	$shiprocket_method_found = false;
+	foreach ($zone->get_shipping_methods() as $method) {
+		if ('shiprocket_woocommerce_shipping' === $method->id) {
+			$shiprocket_method_found = true;
+		} elseif ('free_shipping' === $method->id) {
+			$zone->delete_shipping_method($method->instance_id);
+		}
+	}
+	if (!$shiprocket_method_found) {
+		$zone->add_shipping_method('shiprocket_woocommerce_shipping');
+	}
+
+	ashtanga_configure_local_test_shipping($zone);
+}
+
+function ashtanga_configure_local_test_shipping($zone) {
+	$instance_id = (int) get_option('ashtanga_local_test_flat_rate_instance_id', 0);
+	if (!ashtanga_local_checkout_testing_enabled()) {
+		if ($instance_id) {
+			$zone->delete_shipping_method($instance_id);
+			delete_option('ashtanga_local_test_flat_rate_instance_id');
+			delete_option('woocommerce_flat_rate_' . $instance_id . '_settings');
+		}
+		return;
+	}
+
+	if (!$instance_id) {
+		$instance_id = (int) $zone->add_shipping_method('flat_rate');
+		if (!$instance_id) {
+			return;
+		}
+		update_option('ashtanga_local_test_flat_rate_instance_id', $instance_id);
+	}
+
+	update_option('woocommerce_flat_rate_' . $instance_id . '_settings', [
+		'title' => 'Local test shipping',
+		'tax_status' => 'none',
+		'cost' => '0',
+		'type' => 'class',
+	]);
+}
+
+function ashtanga_store_setup_notices() {
+	if (!current_user_can('manage_woocommerce')) {
+		return;
+	}
+
+	echo '<div class="notice notice-info"><p>Catalog shipping weights and dimensions are temporary estimates. Replace them with the packed parcel measurements before using live shipping rates.</p></div>';
+	echo '<div class="notice notice-info"><p>Checkout is displayed before sign-in so customers can enter their email code. Order submission is blocked until they sign in; guest orders are not accepted.</p></div>';
+	if (ashtanga_local_checkout_testing_enabled()) {
+		echo '<div class="notice notice-warning"><p>Local checkout testing is enabled: Cash on Delivery and free test shipping are available. This test setting is restricted to the local environment.</p></div>';
+	}
+
+	$razorpay = get_option('woocommerce_razorpay_settings', []);
+	if (!is_array($razorpay) || empty($razorpay['key_id']) || empty($razorpay['key_secret'])) {
+		echo '<div class="notice notice-warning"><p>Online checkout is locked until Razorpay is configured. Add your Razorpay Key ID and Key Secret under WooCommerce &rarr; Settings &rarr; Payments &rarr; Razorpay.</p></div>';
+	}
+
+	$settings = get_option('woocommerce_shiprocket_woocommerce_shipping_settings', []);
+	if (!is_array($settings) || empty($settings['integration_id'])) {
+		echo '<div class="notice notice-warning"><p>Shiprocket delivery estimates require a connected Shiprocket account. Configure it under WooCommerce &rarr; Settings &rarr; Shipping &rarr; Shiprocket App Configuration.</p></div>';
+	}
 }
 
 function ashtanga_seed_store_once() {
@@ -120,6 +394,7 @@ function ashtanga_seed_store_once() {
 			$product->set_category_ids($term_id ? [$term_id] : []);
 			$product->set_sku('ASHT-' . strtoupper(substr(md5($category_slug . $name), 0, 8)));
 			$product->set_stock_status('instock');
+			ashtanga_set_estimated_shipping_data($product, $size);
 			if ($size !== '') {
 				$size_attribute = new WC_Product_Attribute();
 				$size_attribute->set_name('Size');
@@ -146,8 +421,8 @@ function ashtanga_seed_store_once() {
 	$pages = [
 		'ashtanga-home' => ['Ashtanga | Natural Herbal Care', ''],
 		'about-ashtanga' => ['About Ashtanga Ayurveda', '<p>Welcome to Ashtanga Ayurveda, where ancient herbal traditions meet modern self-care. We craft natural cosmetics, hair care, and skincare essentials designed to nourish your body and soul. Every product is carefully formulated using botanical extracts, herbs, and traditional wisdom.</p><h2>Our mission</h2><p>To bring the healing touch of nature directly to your daily routine with safe, sustainable, and effective herbal solutions.</p><p><strong>Ashtanga Ayurveda</strong><br>Nature Valley Road, Kerala, India - 671551</p>'],
-		'shipping-policy' => ['Shipping Policy', '<p>Free shipping on all orders above ₹499. Standard delivery takes 3–5 business days via trusted courier partners. Delivery times may vary by destination and local conditions.</p><h2>Payment methods</h2><p>We accept UPI, Google Pay, PhonePe, credit and debit cards, net banking, and Cash on Delivery (COD), subject to availability at checkout.</p>'],
-		'returns-refunds' => ['Returns & Refunds', '<p>Our 7-day easy return policy applies to items received damaged or incorrect. Please contact customer care within 7 days of delivery with your order number and photos of the item.</p><p>Items must be unopened and unused in their original packaging to be eligible for exchange. Once a return is approved and inspected, we will confirm the available resolution.</p><h2>Contact customer care</h2><p><a href="mailto:support@ashtangaayurveda.in">support@ashtangaayurveda.in</a><br><a href="tel:+919876543210">+91 98765 43210</a></p>'],
+		'shipping-policy' => ['Shipping Policy', '<p>Free shipping on all orders above ₹499. Standard delivery takes 3–5 business days via trusted courier partners. Delivery times may vary by destination and local conditions.</p><h2>Payment methods</h2><p>Payment is accepted using the prepaid options shown at checkout. Cash on Delivery is not available.</p>'],
+		'returns-refunds' => ['Returns Policy', '<p>Orders are prepaid and are not eligible for change-of-mind returns or exchanges.</p><p>If an order arrives damaged or incorrect, email <a href="mailto:support@ashtangaayurveda.in">support@ashtangaayurveda.in</a> with your order number and details so we can review it. This policy does not limit any consumer rights or remedies that cannot legally be excluded.</p>'],
 	];
 	$page_ids = [];
 	foreach ($pages as $slug => $page_data) {
@@ -162,51 +437,26 @@ function ashtanga_seed_store_once() {
 		update_option('page_on_front', $page_ids['ashtanga-home']);
 	}
 	update_option('woocommerce_currency', 'INR');
-	ashtanga_configure_free_shipping();
 	update_option('ashtanga_store_seeded', gmdate('c'));
 }
 
-function ashtanga_configure_free_shipping() {
-	if (!class_exists('WC_Shipping_Zone')) {
+function ashtanga_update_returns_policy_once() {
+	if (get_option('ashtanga_returns_policy_v1')) {
 		return;
 	}
 
-	$zone = null;
-	foreach (WC_Shipping_Zones::get_zones() as $zone_data) {
-		$candidate = new WC_Shipping_Zone((int) $zone_data['id']);
-		foreach ($candidate->get_zone_locations() as $location) {
-			if ($location->type === 'country' && $location->code === 'IN') {
-				$zone = $candidate;
-				break 2;
-			}
-		}
-	}
-	if (!$zone) {
-		$zone = new WC_Shipping_Zone();
-		$zone->set_zone_name('India');
-		$zone->add_location('IN', 'country');
-		$zone->save();
-	}
-
-	$instance_id = 0;
-	foreach ($zone->get_shipping_methods(false) as $method) {
-		if ($method->id === 'free_shipping') {
-			$instance_id = (int) $method->instance_id;
-			break;
-		}
-	}
-	if (!$instance_id) {
-		$instance_id = (int) $zone->add_shipping_method('free_shipping');
-	}
-	if ($instance_id) {
-		update_option('woocommerce_free_shipping_' . $instance_id . '_settings', [
-			'title' => 'Free shipping on orders over ₹499',
-			'requires' => 'min_amount',
-			'min_amount' => '499',
-			'ignore_discounts' => 'no',
+	$page = get_page_by_path('returns-refunds');
+	if ($page) {
+		wp_update_post([
+			'ID' => $page->ID,
+			'post_title' => 'Returns Policy',
+			'post_content' => '<p>Orders are prepaid and are not eligible for change-of-mind returns or exchanges.</p><p>If an order arrives damaged or incorrect, email <a href="mailto:support@ashtangaayurveda.in">support@ashtangaayurveda.in</a> with your order number and details so we can review it. This policy does not limit any consumer rights or remedies that cannot legally be excluded.</p>',
 		]);
 	}
+	update_option('ashtanga_returns_policy_v1', gmdate('c'));
 }
+
+add_action('init', 'ashtanga_update_returns_policy_once', 40);
 
 function ashtanga_import_product_image($image_path, $product_id, $description) {
 	$hash = md5_file($image_path);

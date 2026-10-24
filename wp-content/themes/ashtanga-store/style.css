@@ -10,19 +10,19 @@ Text Domain: ashtanga-store
 */
 
 :root {
-	--ashtanga-forest: #2c5e3b;
-	--ashtanga-leaf: #4a7c59;
-	--ashtanga-ink: #202923;
-	--ashtanga-muted: #67736a;
-	--ashtanga-paper: #f6f8f4;
-	--ashtanga-line: #e3e9e2;
+	--ashtanga-forest: #173f35;
+	--ashtanga-leaf: #62866d;
+	--ashtanga-ink: #26352e;
+	--ashtanga-muted: #68766d;
+	--ashtanga-paper: #f5f3e8;
+	--ashtanga-line: #e4e2d6;
 	--ashtanga-page: #ffffff;
 	--ashtanga-surface: #ffffff;
-	--ashtanga-surface-soft: #f6f8f4;
-	--ashtanga-text: #202923;
-	--ashtanga-text-muted: #67736a;
-	--ashtanga-border: #d9e2d8;
-	--ashtanga-focus: #4a7c59;
+	--ashtanga-surface-soft: #f7f5eb;
+	--ashtanga-text: #26352e;
+	--ashtanga-text-muted: #68766d;
+	--ashtanga-border: #dcdccf;
+	--ashtanga-focus: #62866d;
 	--ashtanga-control-radius: 6px;
 	--ashtanga-control-height: 46px;
 	color-scheme: light;
@@ -51,7 +51,7 @@ input[type="text"], input[type="email"], input[type="tel"], input[type="search"]
 input[type="checkbox"], input[type="radio"] { accent-color: var(--ashtanga-forest); }
 :where(button, input, select, textarea, a):focus-visible { outline: 3px solid color-mix(in srgb, var(--ashtanga-focus) 55%, transparent); outline-offset: 2px; }
 ::placeholder { color: var(--ashtanga-text-muted); opacity: 1; }
-.wp-site-blocks { overflow: clip; }
+.wp-site-blocks { overflow-x: clip; overflow-y: visible; }
 .ashtanga-header {
 	position: sticky;
 	top: 0;
@@ -64,9 +64,9 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--ashtanga-fores
 }
 .ashtanga-header__inner {
 	display: grid;
-	grid-template-columns: 44px 156px minmax(260px, 1fr) auto;
+	grid-template-columns: 44px 156px minmax(180px, 1fr) auto;
 	align-items: center;
-	gap: 28px;
+	gap: 18px;
 	width: min(1280px, calc(100% - 48px));
 	min-height: 82px;
 	margin-inline: auto;
@@ -105,6 +105,7 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--ashtanga-fores
 .ashtanga-menu__heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding-bottom: 21px; border-bottom: 1px solid var(--ashtanga-border); }
 .ashtanga-menu__heading h2 { margin: 0; color: var(--ashtanga-forest); font-family: Georgia, "Times New Roman", serif; font-size: 24px; font-weight: 500; }
 .ashtanga-menu__nav { display: grid; align-content: start; padding-top: 12px; }
+.ashtanga-menu__nav > p { display: contents; }
 .ashtanga-menu__link, .ashtanga-menu__group > summary {
 	display: flex;
 	min-height: 50px;
@@ -125,11 +126,23 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--ashtanga-fores
 .ashtanga-menu__submenu a, .ashtanga-menu__policies a { display: flex; min-height: 42px; align-items: center; color: var(--ashtanga-text-muted); font-size: 14px; text-decoration: none; }
 .ashtanga-menu__submenu a:hover, .ashtanga-menu__policies a:hover, .ashtanga-menu__link:hover, .ashtanga-menu__group > summary:hover { color: var(--ashtanga-leaf); }
 .ashtanga-menu__cart span { display: inline-grid; min-width: 24px; height: 24px; place-items: center; border-radius: 50%; background: var(--ashtanga-forest); color: var(--ashtanga-surface); font-size: 12px; }
-.ashtanga-menu__policies { display: flex; gap: 22px; margin-top: auto; padding-top: 28px; }
+.ashtanga-account-prompt { display: inline-block; margin: 8px 0; color: var(--ashtanga-forest); font-weight: 700; }
+.ashtanga-menu__account { padding: 10px 0 4px; }
+.ashtanga-menu__account-prompt { margin: 0; }
+.ashtanga-menu__footer { margin-top: auto; padding-top: 28px; }
+.ashtanga-menu__policies { display: flex; flex-wrap: wrap; gap: 0 22px; }
+.ashtanga-menu__logout { display: inline-flex; min-height: 42px; align-items: center; margin-top: 10px; border-top: 1px solid var(--ashtanga-border); color: var(--ashtanga-text); font-size: 14px; font-weight: 700; text-decoration: none; }
+.ashtanga-menu__logout:hover, .ashtanga-account-prompt:hover { color: var(--ashtanga-leaf); }
 @keyframes ashtanga-menu-open { from { opacity: .7; transform: translateX(-18px); } to { opacity: 1; transform: translateX(0); } }
-.ashtanga-brand { display: flex; align-items: center; }
-.ashtanga-brand img { display: block; width: 156px; height: auto; }
-.ashtanga-search { position: relative; display: flex; align-items: center; width: min(100%, 620px); justify-self: center; }
+.ashtanga-brand {
+	display: flex;
+	width: 140px;
+	min-height: 76px;
+	align-items: center;
+	justify-content: center;
+}
+.ashtanga-brand img { display: block; width: 100%; height: auto; }
+.ashtanga-search { position: relative; display: flex; align-items: center; width: min(100%, 620px); justify-self: stretch; }
 .ashtanga-search input[type="search"] {
 	width: 100%;
 	min-height: 44px;
@@ -163,20 +176,21 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--ashtanga-fores
 	min-height: 410px;
 	display: grid;
 	align-items: center;
-	background: #eef3ea;
+	background: #f2f0e5;
 }
 .ashtanga-main.is-layout-constrained > .ashtanga-hero { width: 100vw !important; max-width: none !important; margin-left: calc(50% - 50vw) !important; margin-right: calc(50% - 50vw) !important; }
 .ashtanga-hero::before {
 	position: absolute;
 	z-index: -1;
 	inset: 0;
-	background: linear-gradient(90deg, rgba(246,248,244,.96) 0%, rgba(246,248,244,.88) 44%, rgba(246,248,244,.12) 100%), url("assets/images/hero-botanical.jpg") center 48% / cover;
+	background: linear-gradient(90deg, rgba(245,243,232,.97) 0%, rgba(245,243,232,.9) 44%, rgba(245,243,232,.16) 100%), url("assets/images/hero-botanical.jpg") center 48% / cover;
 	content: "";
 }
 .ashtanga-hero__inner { width: min(1180px, calc(100% - 48px)); margin: 0 auto; padding-block: 76px; }
 .ashtanga-eyebrow { margin: 0 0 14px; color: var(--ashtanga-leaf); font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
 .ashtanga-hero h1 { max-width: 620px; margin: 0; color: var(--ashtanga-forest); font-family: Georgia, "Times New Roman", serif; font-size: 60px; font-weight: 500; line-height: 1.06; }
 .ashtanga-hero p:not(.ashtanga-eyebrow) { max-width: 480px; margin: 18px 0 26px; color: #4e5d51; font-size: 17px; }
+.ashtanga-hero__account { display: table; margin: 0 0 16px !important; }
 .ashtanga-button, .ashtanga-products .add_to_cart_button, .ashtanga-products .product_type_simple {
 	display: inline-flex;
 	min-height: 45px;
@@ -223,7 +237,16 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--ashtanga-fores
 .ashtanga-footer p { margin: 5px 0; color: #d4e0d4; font-size: 13px; }
 .ashtanga-footer a { color: #e6efdf; }
 .ashtanga-footer__links { display: grid; gap: 8px; font-size: 13px; }
+.ashtanga-footer__email { display: inline-flex; width: fit-content; align-items: center; gap: 7px; }
+.ashtanga-footer__email svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.6; }
+.ashtanga-footer__whatsapp { display: inline-flex; width: fit-content; align-items: center; gap: 7px; }
+.ashtanga-footer__whatsapp svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.5; }
 .ashtanga-footer__bottom { border-top: 1px solid rgba(255,255,255,.16); padding: 13px 24px; color: #d4e0d4; font-size: 12px; text-align: center; }
+.ashtanga-footer__instagram { display: inline-flex; align-items: center; gap: 5px; }
+.ashtanga-footer__instagram svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+.ashtanga-footer__instagram .ashtanga-footer__instagram-dot { fill: currentColor; stroke: none; }
+.ashtanga-footer__developer { display: inline-flex; align-items: center; gap: 3px; }
+.ashtanga-footer__developer svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
 .ashtanga-content { width: min(900px, calc(100% - 48px)); margin: 48px auto 72px; }
 .ashtanga-content h1, .ashtanga-content h2 { color: var(--ashtanga-forest); font-family: Georgia, "Times New Roman", serif; font-weight: 500; }
 .ashtanga-content h1 { font-size: 42px; }
@@ -248,6 +271,50 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--ashtanga-fores
 .ashtanga-single-product .wp-block-post-title { color: var(--ashtanga-forest); font-family: Georgia, "Times New Roman", serif; font-weight: 500; }
 .ashtanga-single-product .wp-block-woocommerce-product-price { margin-block: 16px; color: var(--ashtanga-forest); font-size: 24px; font-weight: 800; }
 .ashtanga-single-product .wp-block-post-excerpt { color: #4f5c52; }
+.ashtanga-delivery-checker { position: relative; width: fit-content; min-width: 0; margin: 16px 0; padding: 0; }
+.ashtanga-delivery-checker__form { display: flex; align-items: center; gap: 10px; white-space: nowrap; }
+.ashtanga-delivery-checker__form label { color: var(--ashtanga-forest); font-size: 13px; font-weight: 700; white-space: nowrap; }
+.ashtanga-delivery-checker__controls { display: flex; min-width: 0; align-items: center; gap: 6px; }
+.ashtanga-delivery-checker__controls input { width: 126px; min-width: 0; min-height: 42px; padding: 7px 10px; border: 1px solid var(--ashtanga-border); border-radius: var(--ashtanga-control-radius); background: var(--ashtanga-surface); color: var(--ashtanga-text); }
+.ashtanga-delivery-checker__controls button { display: inline-flex; min-height: 42px; flex: 0 0 auto; align-items: center; justify-content: center; gap: 7px; padding: 7px 12px; border: 0; border-radius: var(--ashtanga-control-radius); background: var(--ashtanga-forest); color: #fff; font-size: 13px; font-weight: 700; white-space: nowrap; cursor: pointer; transition: background-color .18s ease, transform .18s ease; }
+.ashtanga-delivery-checker__controls button:disabled { cursor: wait; opacity: .85; }
+.ashtanga-delivery-checker__controls button.is-checking { background: var(--ashtanga-leaf); }
+.ashtanga-delivery-checker__controls button.is-complete { animation: ashtanga-delivery-complete .35s ease-out; }
+.ashtanga-delivery-checker__controls button[data-state="available"] { background: var(--ashtanga-forest); }
+.ashtanga-delivery-checker__controls button[data-state="unavailable"], .ashtanga-delivery-checker__controls button[data-state="error"] { background: #765d30; }
+.ashtanga-delivery-checker__spinner, .ashtanga-delivery-checker__complete-icon { display: none; width: 16px; height: 16px; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
+.ashtanga-delivery-checker__controls button.is-checking .ashtanga-delivery-checker__spinner { display: block; animation: ashtanga-delivery-spin .8s linear infinite; }
+.ashtanga-delivery-checker__controls button.is-complete .ashtanga-delivery-checker__complete-icon { display: block; }
+.ashtanga-delivery-checker__icon-available, .ashtanga-delivery-checker__icon-unavailable, .ashtanga-delivery-checker__icon-error { display: none; }
+.ashtanga-delivery-checker__controls button[data-state="available"] .ashtanga-delivery-checker__icon-available,
+.ashtanga-delivery-checker__message[data-state="available"] .ashtanga-delivery-checker__icon-available { display: block; }
+.ashtanga-delivery-checker__controls button[data-state="unavailable"] .ashtanga-delivery-checker__icon-unavailable,
+.ashtanga-delivery-checker__message[data-state="unavailable"] .ashtanga-delivery-checker__icon-unavailable { display: block; }
+.ashtanga-delivery-checker__controls button[data-state="error"] .ashtanga-delivery-checker__icon-error,
+.ashtanga-delivery-checker__message[data-state="error"] .ashtanga-delivery-checker__icon-error { display: block; }
+.ashtanga-delivery-checker__message[hidden] { display: none !important; }
+.ashtanga-delivery-checker__message { position: absolute; top: calc(100% + 8px); left: 0; z-index: 30; display: flex; width: min(340px, calc(100vw - 32px)); align-items: flex-start; gap: 9px; margin: 0; padding: 11px 10px; border: 1px solid var(--ashtanga-border); border-radius: var(--ashtanga-control-radius); background: var(--ashtanga-surface); color: var(--ashtanga-text); box-shadow: 0 8px 24px rgba(15, 33, 19, .16); font-size: 13px; line-height: 1.4; white-space: normal; animation: ashtanga-delivery-popup .18s ease-out; }
+.ashtanga-delivery-checker__message[data-state="available"] { border-color: #9cbea0; }
+.ashtanga-delivery-checker__message[data-state="unavailable"], .ashtanga-delivery-checker__message[data-state="error"] { border-color: #d9c89e; }
+.ashtanga-delivery-checker__message-icon { width: 17px; height: 17px; flex: 0 0 auto; margin-top: 1px; fill: none; stroke: var(--ashtanga-forest); stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
+.ashtanga-delivery-checker__message[data-state="unavailable"] .ashtanga-delivery-checker__message-icon, .ashtanga-delivery-checker__message[data-state="error"] .ashtanga-delivery-checker__message-icon { stroke: #765d30; }
+.ashtanga-delivery-checker__message-text { flex: 1; }
+.ashtanga-delivery-checker__dismiss { display: inline-grid; width: 22px; height: 22px; flex: 0 0 auto; place-items: center; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--ashtanga-text-muted); font-size: 20px; line-height: 1; cursor: pointer; }
+.ashtanga-delivery-checker__dismiss:hover { background: var(--ashtanga-surface-soft); color: var(--ashtanga-text); }
+@keyframes ashtanga-delivery-spin { to { transform: rotate(360deg); } }
+@keyframes ashtanga-delivery-complete { 50% { transform: scale(1.04); } }
+@keyframes ashtanga-delivery-popup { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+.ashtanga-email-otp { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; }
+.ashtanga-email-otp-help { flex-basis: 100%; margin: 7px 0 0; color: var(--ashtanga-text-muted); font-size: 13px; }
+.ashtanga-email-otp input { width: 140px; min-height: 40px; padding: 8px 10px; border: 1px solid var(--ashtanga-border); border-radius: var(--ashtanga-control-radius); }
+.ashtanga-email-otp-button { min-height: 40px; padding: 8px 12px; border: 1px solid var(--ashtanga-border); border-radius: var(--ashtanga-control-radius); background: var(--ashtanga-surface-soft); color: var(--ashtanga-forest); font-weight: 700; cursor: pointer; }
+.ashtanga-email-otp-button:disabled { cursor: wait; opacity: .7; }
+.ashtanga-email-otp-status { margin: 5px 0 0; color: var(--ashtanga-muted); font-size: 13px; }
+.ashtanga-email-otp-status[data-state="success"] { color: var(--ashtanga-forest); }
+.ashtanga-email-otp-status[data-state="error"] { color: #9a452f; }
+body.woocommerce-account:not(.logged-in) .woocommerce-form-login > p:has(#password),
+body.woocommerce-account:not(.logged-in) .woocommerce-form-login > p:has(button[name="login"]),
+body.woocommerce-account:not(.logged-in) .woocommerce-form-login .lost_password { display: none !important; }
 .ashtanga-checkout-page .wc-block-checkout { gap: 40px; }
 .ashtanga-checkout-page .wc-block-components-checkout-step__heading h2 { color: var(--ashtanga-forest); font-family: Georgia, "Times New Roman", serif; font-size: 23px; font-weight: 500; }
 .ashtanga-checkout-page .wc-block-components-text-input input, .ashtanga-checkout-page .wc-block-components-combobox .components-combobox-control__input, .ashtanga-checkout-page .wc-block-components-address-form select { border-radius: 3px; }
@@ -282,7 +349,7 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--ashtanga-fores
 }
 
 @media (max-width: 980px) {
-	.ashtanga-header__inner { grid-template-columns: 42px 140px minmax(160px, 1fr) auto; gap: 12px; min-height: 72px; padding-block: 10px; }
+	.ashtanga-header__inner { grid-template-columns: 42px 140px minmax(150px, 1fr) auto; gap: 10px; min-height: 72px; padding-block: 10px; }
 	.ashtanga-brand img { width: 140px; }
 	.ashtanga-nav { justify-content: end; gap: 14px; }
 	.ashtanga-hero__inner { width: min(900px, calc(100% - 48px)); }
@@ -300,6 +367,12 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--ashtanga-fores
 	.ashtanga-search { grid-column: 1 / -1; grid-row: 2; width: 100%; min-height: 42px; }
 	.ashtanga-search input[type="search"] { min-height: 42px; height: 42px; padding-block: 7px; }
 	.ashtanga-search button { top: 4px; }
+	.ashtanga-delivery-checker { width: 100%; }
+	.ashtanga-delivery-checker__form { justify-content: space-between; gap: 6px; }
+	.ashtanga-delivery-checker__form label { font-size: 12px; }
+	.ashtanga-delivery-checker__controls { flex: 1; justify-content: flex-end; }
+	.ashtanga-delivery-checker__controls input { width: auto; min-width: 0; min-height: 38px; flex: 1; padding: 6px 8px; }
+	.ashtanga-delivery-checker__controls button { min-height: 38px; padding: 6px 9px; font-size: 12px; }
 	.ashtanga-hero { min-height: 362px; }
 	.ashtanga-hero::before { background: linear-gradient(90deg, rgba(246,248,244,.96), rgba(246,248,244,.82)), url("assets/images/hero-botanical.jpg") 60% center / cover; }
 	.ashtanga-hero__inner { width: calc(100% - 40px); padding-block: 48px; }
@@ -316,7 +389,7 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--ashtanga-fores
 	.ashtanga-content { width: calc(100% - 32px); margin-top: 34px; }
 	.ashtanga-woocommerce-archive, .ashtanga-cart-page, .ashtanga-checkout-page { width: calc(100% - 32px) !important; }
 	.ashtanga-single-product .wp-block-columns { gap: 22px; }
-	.ashtanga-checkout-page .wc-block-checkout { gap: 24px; }
+	.ashtanga-checkout-page .wc-block-checkout { gap: 24px;  }
 	.ashtanga-content h1 { font-size: 34px; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -364,6 +437,7 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--ashtanga-fores
 	.ashtanga-content .wc-block-components-totals-wrapper,
 	.ashtanga-content .wc-block-components-order-summary { background-color: var(--ashtanga-surface-soft); color: var(--ashtanga-text); }
 	.ashtanga-header { background: var(--ashtanga-surface); }
+	.ashtanga-brand img { filter: brightness(0) invert(1); }
 	.ashtanga-search input[type="search"] { background: var(--ashtanga-surface-soft); color: var(--ashtanga-text); }
 	.ashtanga-nav a { color: var(--ashtanga-text); }
 	a { color: #b4d5ae; }
